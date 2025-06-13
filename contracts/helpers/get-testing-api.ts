@@ -3,13 +3,15 @@ import { ethers } from "hardhat";
 export const getTestingAPI = async () => {
   const Signers = await ethers.getSigners();
 
-  const poseidonTestFactory = await ethers.getContractFactory("PoseidonTest");
+  const poseidonHash = await loadPoseidon();
 
+  const poseidonTestFactory = await ethers.getContractFactory("PoseidonTest");
   const poseidonTest = await poseidonTestFactory.deploy();
 
   return {
     Signers,
     poseidonTest,
+    poseidonHash,
   };
 };
 

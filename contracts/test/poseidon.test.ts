@@ -6,8 +6,7 @@ describe("Testing poseidon equivalencies", async () => {
   let poseidonHash: (inputs: bigint[]) => Promise<{ toString(): string }>;
 
   beforeEach(async () => {
-    poseidonHash = await loadPoseidon();
-    ({ poseidonTest } = await getTestingAPI());
+    ({ poseidonTest, poseidonHash } = await getTestingAPI());
   });
 
   it("should work", async () => {
