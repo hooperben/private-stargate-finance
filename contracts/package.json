@@ -2,6 +2,7 @@
   "name": "contracts",
   "private": true,
   "devDependencies": {
+    "@aztec/foundation": "^0.87.8",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@types/bun": "latest",
     "hardhat": "^2.24.3",
