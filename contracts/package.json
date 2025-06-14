@@ -1,6 +1,9 @@
 {
   "name": "contracts",
   "private": true,
+  "scripts": {
+    "build": "./scripts/build-and-export-circuits.sh"
+  },
   "devDependencies": {
     "@aztec/foundation": "^0.87.8",
     "@layerzerolabs/lz-evm-oapp-v2": "^3.0.103",
