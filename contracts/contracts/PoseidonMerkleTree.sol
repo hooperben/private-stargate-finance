@@ -34,6 +34,8 @@ contract PoseidonMerkleTree {
         MAX_LEAF_INDEX = 2 ** (_height - 1);
 
         poseidon2Hasher = new Poseidon2();
+
+        roots[0] = uint256(INITIAL_ROOT);
     }
 
     function zeros(uint256 i) public pure returns (uint256) {
@@ -107,34 +109,41 @@ contract PoseidonMerkleTree {
         uint256 currentIndex = insertIndex;
         uint256 currentHash = _leaf;
 
-        uint256 left;
-        uint256 right;
+        filledSubtrees[currentIndex] = currentHash;
 
         for (uint256 i = 0; i < height - 1; i++) {
-            if (currentIndex % 2 == 0) {
-                left = currentHash;
-                right = zeros(i);
-            } else {
-                left = filledSubtrees[i];
-                right = currentHash;
+            bool isLeft = currentIndex % 2 == 0;
+            uint256 siblingIndex = isLeft ? currentIndex + 1 : currentIndex - 1;
+
+            // Get sibling value (either stored or default zero)
+            uint256 sibling = filledSubtrees[siblingIndex];
+            if (sibling == 0) {
+                sibling = zeros(i);
             }
-            // set the levels hash
-            currentHash = hashLeftRight(left, right);
-            // move up the tree
-            currentIndex /= 2;
+
+            // Calculate parent hash based on position
+            if (isLeft) {
+                currentHash = hashLeftRight(currentHash, sibling);
+            } else {
+                currentHash = hashLeftRight(sibling, currentHash);
+            }
+
+            // Move up to parent level
+            currentIndex = currentIndex / 2;
+
+            // Store the computed hash for this level and index
+            uint256 parentKey = (1 << (height - 1 - i)) + currentIndex;
+            filledSubtrees[parentKey] = currentHash;
         }
 
         uint32 newRootIndex = (currentRootIndex + 1) % ROOT_HISTORY_SIZE;
         currentRootIndex = newRootIndex;
-
-        // the above for loop stops at the top level, i.e the root
         roots[newRootIndex] = currentHash;
 
-        nextIndex = insertIndex + 1; // Increment nextIndex based on the original insertion index
+        nextIndex = insertIndex + 1;
+        emit LeafInserted(insertIndex, _leaf);
 
-        emit LeafInserted(insertIndex, currentHash);
-
-        return insertIndex; // Return the index where this leaf was inserted
+        return insertIndex;
     }
 
     function hashLeftRight(

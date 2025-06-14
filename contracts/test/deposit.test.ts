@@ -6,6 +6,7 @@ import { UltraHonkBackend } from "@aztec/bb.js";
 import { Contract } from "ethers";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { PoseidonMerkleTree } from "../helpers/PoseidonMerkleTree";
 
 describe("Testing deposit functionality", () => {
   let Signers: SignerWithAddress[];
@@ -16,6 +17,7 @@ describe("Testing deposit functionality", () => {
   let circuitBackend: UltraHonkBackend;
 
   let privateStargateFinance: Contract;
+  let tree: PoseidonMerkleTree;
 
   beforeEach(async () => {
     Signers = await ethers.getSigners();
@@ -26,6 +28,7 @@ describe("Testing deposit functionality", () => {
       circuitNoir,
       circuitBackend,
       privateStargateFinance,
+      tree,
     } = await getTestingAPI());
   });
 
@@ -59,6 +62,34 @@ describe("Testing deposit functionality", () => {
       proof.publicInputs,
       "0x",
     );
+
+    // Wait for the transaction to be mined and get the receipt
+    // const receipt = await depositTx.wait();
+
+    // Find the LeafInserted event
+    // const leafInsertedEvent = receipt.events?.find(
+    //   (event: any) => event.event === "LeafInserted",
+    // );
+
+    // if (leafInsertedEvent) {
+    //   console.log("LeafInserted event:");
+    //   console.log("  leafIndex:", leafInsertedEvent.args.leafIndex.toString());
+    //   console.log("  leafValue:", leafInsertedEvent.args.leafValue.toString());
+    // } else {
+    //   console.log("LeafInserted event not found");
+    // }
+
+    // console.log(proof.publicInputs[0]);
+    await tree.insert(proof.publicInputs[0], 0);
+
+    const newRoot = await tree.getRoot();
+    console.log("newRoot: ", newRoot.toBigInt());
+
+    const root0 = await privateStargateFinance.roots(0);
+    console.log("root0: ", root0);
+
+    const root1 = await privateStargateFinance.roots(1);
+    console.log("root1: ", root1);
 
     // if we update our in memory tree to match the contract our roots should match
 

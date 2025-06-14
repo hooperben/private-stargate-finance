@@ -28,8 +28,11 @@ export class PoseidonMerkleTree {
   }
 
   private async initializeDefaultNodes() {
-    // Initialize with zero value
-    this.defaultNodes[0] = Fr.fromString("0");
+    // Initialize with the same zero value used in Solidity
+    // ZERO_VALUE = keccak256(abi.encodePacked("TANGERINE")) % FIELD_MODULUS
+    this.defaultNodes[0] = Fr.fromString(
+      "0x1e2856f9f722631c878a92dc1d84283d04b76df3e1831492bdf7098c1e65e478",
+    );
 
     // Calculate default nodes for each level
     for (let i = 1; i < this.levels; i++) {

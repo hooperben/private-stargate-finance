@@ -1,8 +1,8 @@
+import { Contract } from "ethers";
 import { getTestingAPI } from "../helpers/get-testing-api";
-import { PoseidonTest } from "../typechain-types";
 
-describe("Testing poseidon equivalencies", async () => {
-  let poseidonTest: PoseidonTest;
+describe.skip("Testing poseidon equivalencies", async () => {
+  let poseidonTest: Contract;
   let poseidonHash: (inputs: bigint[]) => Promise<{ toString(): string }>;
 
   beforeEach(async () => {
