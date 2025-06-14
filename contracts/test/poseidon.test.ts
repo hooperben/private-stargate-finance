@@ -1,7 +1,7 @@
 import { Contract } from "ethers";
 import { getTestingAPI } from "../helpers/get-testing-api";
 
-describe.skip("Testing poseidon equivalencies", async () => {
+describe("Testing poseidon equivalencies", async () => {
   let poseidonTest: Contract;
   let poseidonHash: (inputs: bigint[]) => Promise<{ toString(): string }>;
 
@@ -32,8 +32,9 @@ describe.skip("Testing poseidon equivalencies", async () => {
 
     const secret =
       2389312107716289199307843900794656424062350252250388738019021107824217896920n;
-    const owner =
+    const owner_secret =
       10036677144260647934022413515521823129584317400947571241312859176539726523915n;
+    const owner = BigInt((await poseidonHash([owner_secret])).toString());
     const note = await poseidonHash([assetId, amount, owner, secret]);
 
     console.log(note);
@@ -43,7 +44,21 @@ describe.skip("Testing poseidon equivalencies", async () => {
       assetId,
       amount,
       owner,
+      owner_secret,
       secret,
     });
+
+    const leafIndex = 0n;
+
+    const nullifier = await poseidonHash([
+      leafIndex,
+      owner,
+      secret,
+      assetId,
+      amount,
+    ]);
+
+    console.log("nullifier: ", nullifier);
+    console.log("nullifier: ", BigInt(nullifier.toString()));
   });
 });

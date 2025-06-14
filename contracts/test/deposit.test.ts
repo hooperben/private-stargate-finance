@@ -38,12 +38,24 @@ describe("Testing deposit functionality", () => {
 
     const secret =
       2389312107716289199307843900794656424062350252250388738019021107824217896920n;
-    const owner =
+    const owner_secret =
       10036677144260647934022413515521823129584317400947571241312859176539726523915n;
-
+    const owner = BigInt((await poseidonHash([owner_secret])).toString());
     const assetIdBigInt = BigInt(assetId);
 
     const note = await poseidonHash([assetIdBigInt, amount, owner, secret]);
+
+    console.log(note);
+    console.log();
+
+    console.log({
+      hash: BigInt(note.toString()),
+      assetId,
+      amount,
+      owner,
+      owner_secret,
+      secret,
+    });
 
     const { witness } = await circuitNoir.execute({
       hash: BigInt(note.toString()).toString(),
@@ -96,7 +108,8 @@ describe("Testing deposit functionality", () => {
 
     const newRoot = await tree.getRoot();
 
-    console.log(newRoot);
+    console.log("New Root: ", newRoot);
+    console.log("New Root: ", BigInt(newRoot.toString()));
 
     // if we update our in memory tree to match the contract our roots should match
 

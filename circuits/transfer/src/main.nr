@@ -1,4 +1,5 @@
 global HEIGHT: u32 = 12;
+global NOTE_COUNT: u32 = 3;
 
 use std::hash::poseidon2;
 
@@ -8,13 +9,23 @@ struct InputNote {
     owner: Field,
     owner_secret: Field,
     secret: Field,
-    nullifier: Field,
     leaf_index: Field,
-    path: [Field; HEIGHT],
-    path_indices: [Field; HEIGHT],
+    path: [Field; HEIGHT - 1],
+    path_indices: [Field; HEIGHT - 1],
 }
 
-fn compute_merkle_root(leaf: Field, path: [Field; HEIGHT - 1], path_indices: [Field; HEIGHT - 1]) -> Field {
+struct OutputNote {
+    owner: Field,
+    secret: Field,
+    asset_id: Field,
+    amount: Field,
+}
+
+fn compute_merkle_root(
+    leaf: Field,
+    path: [Field; HEIGHT - 1],
+    path_indices: [Field; HEIGHT - 1],
+) -> Field {
     let mut current = leaf;
     for i in 0..HEIGHT - 1 {
         let path_bit = path_indices[i];
@@ -28,19 +39,78 @@ fn compute_merkle_root(leaf: Field, path: [Field; HEIGHT - 1], path_indices: [Fi
     current
 }
 
-fn main(x: Field, y: pub Field) {
-    assert(x != y);
+fn compute_nullifier(
+    leaf_index: Field,
+    owner: Field,
+    secret: Field,
+    asset_id: Field,
+    asset_amount: Field,
+) -> Field {
+    poseidon2::Poseidon2::hash([leaf_index, owner, secret, asset_id, asset_amount], 5)
+}
+
+fn reconstruct_leaf(asset_id: Field, asset_amount: Field, owner: Field, secret: Field) -> Field {
+    poseidon2::Poseidon2::hash([asset_id, asset_amount, owner, secret], 4)
+}
+
+fn main(
+    root: Field,
+    input_notes: [InputNote; NOTE_COUNT],
+    output_notes: [OutputNote; NOTE_COUNT],
+    nullifiers: pub [Field; NOTE_COUNT],
+) {
+    for i in 0..NOTE_COUNT - 1 {
+        // if note is not empty
+        if input_notes[i].asset_amount != 0 {
+            // check owner is correct
+            let owner_pub_key = poseidon2::Poseidon2::hash([input_notes[i].owner_secret], 1);
+            assert(owner_pub_key == input_notes[i].owner);
+
+            // check nullifier is correct
+            let reconstructed_nullifier = compute_nullifier(
+                input_notes[i].leaf_index,
+                input_notes[i].owner,
+                input_notes[i].secret,
+                input_notes[i].asset_id,
+                input_notes[i].asset_amount,
+            );
+            assert(reconstructed_nullifier == nullifiers[i]);
+
+            // check merkle membership
+            let reconstructed_leaf = reconstruct_leaf(
+                input_notes[i].asset_id,
+                input_notes[i].asset_amount,
+                input_notes[i].owner,
+                input_notes[i].secret,
+            );
+            let reconstructed_merkle_root = compute_merkle_root(
+                reconstructed_leaf,
+                input_notes[i].path,
+                input_notes[i].path_indices,
+            );
+            assert(reconstructed_merkle_root == root);
+        }
+    }
 }
 
 #[test]
 fn test_main() {
-    main(1, 2);
+    let root = 4221110344891604176205088962198904729260430126413313722462390172704999703195;
+    let asset_id = 1096978651789611665652906124278561787240579697095;
+    let asset_amount = 5;
+    let owner = 10812186542955647827474372651967207045861174805371180171801345448553285386806;
+    let owner_secret =
+        10036677144260647934022413515521823129584317400947571241312859176539726523915; // TODO
+    let secret = 2389312107716289199307843900794656424062350252250388738019021107824217896920;
+
+    let nullifier = 3889730504789135603011318287331683111639714777739573239289638917879152395137;
+
+    let leaf_index = 0;
 
     // this is the empty tree after the hash 9194668555912557146241026266248928483973497222045579120388006164958747201268
     // is inserted at index 0
+    let leaf = 15877031116292595040191017675338240539290338653409019794000313907399651592164;
 
-    let leaf = 9194668555912557146241026266248928483973497222045579120388006164958747201268;
-    let path_indices = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
     let path = [
         13640659629327953230197633652529006805891215582818597888084863207147219313784,
         19984673905358619496530873554532699316557532969285237470013525856790495658245,
@@ -52,12 +122,41 @@ fn test_main() {
         4407863489559565071205165471845081321675763465852502126771740970311657294198,
         20448284296610764092326252358036828964180135505542140040145855516028834425624,
         7022843789375185322738689530892530453984779704784378294646894048972162829679,
-        10906054357754859492130109809751867122631984061959461434096281674698176679467
+        10906054357754859492130109809751867122631984061959461434096281674698176679467,
     ];
-
+    let path_indices = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
 
     let recon_merkle_root = compute_merkle_root(leaf, path, path_indices);
     println(recon_merkle_root);
+    println(root);
+
+    let input_note: InputNote = InputNote {
+        asset_id,
+        asset_amount,
+        owner,
+        owner_secret,
+        secret,
+        leaf_index,
+        path,
+        path_indices,
+    };
+    let nullifiers = [nullifier, 0, 0];
+    let empty_output_note: OutputNote = OutputNote { owner: 0, secret: 0, asset_id: 0, amount: 0 };
+    let empty_input_note: InputNote = InputNote {
+        asset_id: 0,
+        asset_amount: 0,
+        owner: 0,
+        owner_secret: 0,
+        secret: 0,
+        leaf_index: 0,
+        path: [0; HEIGHT - 1],
+        path_indices: [0; HEIGHT - 1],
+    };
+
+    let input_notes = [input_note, empty_input_note, empty_input_note];
+    let outputNotes = [empty_output_note, empty_output_note, empty_output_note];
+
+    main(root, input_notes, outputNotes, nullifiers);
 
     // Uncomment to make test fail
     // main(1, 1);
