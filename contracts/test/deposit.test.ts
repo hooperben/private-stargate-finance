@@ -79,17 +79,24 @@ describe("Testing deposit functionality", () => {
     //   console.log("LeafInserted event not found");
     // }
 
-    // console.log(proof.publicInputs[0]);
+    console.log(proof.publicInputs[0]);
     await tree.insert(proof.publicInputs[0], 0);
 
+    const merkleProof = await tree.getProof(0);
+    console.log(merkleProof.siblings.map((item) => item.toBigInt()));
+    console.log(merkleProof.indices);
+    const leaf = await tree.getLeafValue(0);
+    console.log("leaf: ", leaf.toBigInt());
+
+    // console.log(merkleProof);
+
+    const formmated = merkleProof.siblings.map((item) => item.toBigInt());
+
+    // console.log(formmated);
+
     const newRoot = await tree.getRoot();
-    console.log("newRoot: ", newRoot.toBigInt());
 
-    const root0 = await privateStargateFinance.roots(0);
-    console.log("root0: ", root0);
-
-    const root1 = await privateStargateFinance.roots(1);
-    console.log("root1: ", root1);
+    console.log(newRoot);
 
     // if we update our in memory tree to match the contract our roots should match
 

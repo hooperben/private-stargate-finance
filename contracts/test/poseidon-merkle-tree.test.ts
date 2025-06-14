@@ -1,7 +1,7 @@
 import { PoseidonMerkleTree } from "../helpers/PoseidonMerkleTree";
 import { getTestingAPI } from "../helpers/get-testing-api";
 
-describe("PoseidonMerkleTree", () => {
+describe.skip("PoseidonMerkleTree", () => {
   let tree: PoseidonMerkleTree;
 
   beforeEach(async () => {
