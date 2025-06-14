@@ -8,5 +8,7 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true
-  }
+  },
+  "include": ["./**/*.ts"],
+  "files": ["./hardhat.config.ts"]
 }

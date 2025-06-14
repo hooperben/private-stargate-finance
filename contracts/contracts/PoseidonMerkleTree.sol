@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.24;
 
 import "./utils/Poseidon2.sol";
 
@@ -110,7 +110,7 @@ contract PoseidonMerkleTree {
         uint256 left;
         uint256 right;
 
-        for (uint256 i = 0; i < height; i++) {
+        for (uint256 i = 0; i < height - 1; i++) {
             if (currentIndex % 2 == 0) {
                 left = currentHash;
                 right = zeros(i);

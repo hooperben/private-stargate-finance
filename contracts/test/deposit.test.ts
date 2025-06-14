@@ -1,25 +1,36 @@
 import { Noir } from "@noir-lang/noir_js";
 import { getRandomWithField } from "../helpers";
 import { getTestingAPI } from "../helpers/get-testing-api";
-import { PoseidonTest } from "../typechain-types";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+
 import { UltraHonkBackend } from "@aztec/bb.js";
+import { Contract } from "ethers";
+import { ethers } from "hardhat";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 describe("Testing deposit functionality", () => {
-  let Signers: HardhatEthersSigner[];
-  let poseidonTest: PoseidonTest;
+  let Signers: SignerWithAddress[];
+  let poseidonTest: Contract;
   let poseidonHash: (inputs: bigint[]) => Promise<{ toString(): string }>;
 
   let circuitNoir: Noir;
   let circuitBackend: UltraHonkBackend;
 
+  let privateStargateFinance: Contract;
+
   beforeEach(async () => {
-    ({ poseidonTest, poseidonHash, Signers, circuitNoir, circuitBackend } =
-      await getTestingAPI());
+    Signers = await ethers.getSigners();
+    ({
+      poseidonTest,
+      poseidonHash,
+      // Signers,
+      circuitNoir,
+      circuitBackend,
+      privateStargateFinance,
+    } = await getTestingAPI());
   });
 
-  it.only("testing note proving in typescript", async () => {
-    const assetId = BigInt("0xc026395860Db2d07ee33e05fE50ed7bD583189C7");
+  it("testing note proving in typescript", async () => {
+    const assetId = "0xc026395860Db2d07ee33e05fE50ed7bD583189C7";
     const amount = BigInt("5");
 
     const secret =
@@ -27,11 +38,13 @@ describe("Testing deposit functionality", () => {
     const owner =
       10036677144260647934022413515521823129584317400947571241312859176539726523915n;
 
-    const note = await poseidonHash([assetId, amount, owner, secret]);
+    const assetIdBigInt = BigInt(assetId);
+
+    const note = await poseidonHash([assetIdBigInt, amount, owner, secret]);
 
     const { witness } = await circuitNoir.execute({
       hash: BigInt(note.toString()).toString(),
-      asset_id: assetId.toString(),
+      asset_id: assetIdBigInt.toString(),
       asset_amount: amount.toString(),
       owner: owner.toString(),
       secret: secret.toString(),
@@ -39,6 +52,16 @@ describe("Testing deposit functionality", () => {
 
     const proof = await circuitBackend.generateProof(witness);
 
-    console.log(proof);
+    const depositTx = await privateStargateFinance.deposit(
+      assetId,
+      amount,
+      proof.proof,
+      proof.publicInputs,
+      "0x",
+    );
+
+    // if we update our in memory tree to match the contract our roots should match
+
+    // console.log(depositTx);
   });
 });

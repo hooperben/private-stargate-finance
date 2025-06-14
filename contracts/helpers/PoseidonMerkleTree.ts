@@ -5,12 +5,26 @@ export class PoseidonMerkleTree {
   private levels: number;
   private hashMap: Map<string, Fr>;
   private defaultNodes: Fr[];
+  private nextIndex: number;
+  private currentRootIndex: number;
+  private filledSubtrees: Record<string, Fr | null>;
+  private roots: Record<string, Fr>;
+  private leaves: Fr[];
+  private zeros: Fr | null;
+  public insertedLeaves: Set<number>;
 
   constructor(levels: number) {
     this.levels = levels;
     this.hashMap = new Map();
     this.defaultNodes = new Array(levels);
     this.initializeDefaultNodes();
+    this.nextIndex = 0;
+    this.currentRootIndex = 0;
+    this.filledSubtrees = {};
+    this.roots = {};
+    this.leaves = new Array(2 ** levels);
+    this.zeros = null;
+    this.insertedLeaves = new Set();
   }
 
   private async initializeDefaultNodes() {
@@ -40,6 +54,10 @@ export class PoseidonMerkleTree {
       typeof leaf === "string"
         ? Fr.fromString(leaf)
         : Fr.fromString(leaf.toString());
+
+    // Track this leaf as inserted
+    this.insertedLeaves.add(index);
+    this.nextIndex = Math.max(this.nextIndex, index + 1);
 
     // Insert leaf
     let currentIndex = index;
@@ -136,5 +154,91 @@ export class PoseidonMerkleTree {
 
     // If the leaf doesn't exist in the hashMap, return the default value (zero)
     return leafValue || this.defaultNodes[0];
+  }
+
+  /**
+   * Serialize the tree to JSON format
+   */
+  toJSON(): string {
+    // Convert hashMap to plain object for JSON serialization
+    const hashMapObj: Record<string, string> = {};
+    for (const [key, value] of this.hashMap.entries()) {
+      hashMapObj[key] = value.toString();
+    }
+
+    // Convert defaultNodes to strings
+    const defaultNodesObj = this.defaultNodes.map((node) => node.toString());
+
+    const treeData = {
+      levels: this.levels,
+      nextIndex: this.nextIndex,
+      currentRootIndex: this.currentRootIndex,
+
+      // Save the actual tree data
+      hashMap: hashMapObj,
+      defaultNodes: defaultNodesObj,
+      insertedLeaves: Array.from(this.insertedLeaves),
+
+      // Metadata
+      timestamp: Date.now(),
+      version: "1.0",
+    };
+
+    return JSON.stringify(treeData);
+  }
+
+  /**
+   * Load tree from JSON format
+   */
+  static async fromJSON(jsonString: string): Promise<PoseidonMerkleTree> {
+    const data = JSON.parse(jsonString);
+
+    const tree = new PoseidonMerkleTree(data.levels);
+
+    // Wait for default nodes to be initialized
+    await tree.initializeDefaultNodes();
+
+    // Restore state
+    tree.nextIndex = data.nextIndex || 0;
+    tree.currentRootIndex = data.currentRootIndex || 0;
+
+    // Restore insertedLeaves
+    if (data.insertedLeaves) {
+      tree.insertedLeaves = new Set(data.insertedLeaves);
+    }
+
+    // Restore hashMap
+    tree.hashMap.clear();
+    if (data.hashMap) {
+      for (const [key, valueString] of Object.entries(data.hashMap)) {
+        tree.hashMap.set(key, Fr.fromString(valueString as string));
+      }
+    }
+
+    // Restore defaultNodes
+    if (data.defaultNodes) {
+      tree.defaultNodes = (data.defaultNodes as string[]).map((nodeString) =>
+        Fr.fromString(nodeString),
+      );
+    }
+
+    return tree;
+  }
+
+  /**
+   * Save tree to file
+   */
+  async saveToFile(filepath: string): Promise<void> {
+    const fs = await import("fs/promises");
+    await fs.writeFile(filepath, this.toJSON(), "utf8");
+  }
+
+  /**
+   * Load tree from file
+   */
+  static async loadFromFile(filepath: string): Promise<PoseidonMerkleTree> {
+    const fs = await import("fs/promises");
+    const jsonString = await fs.readFile(filepath, "utf8");
+    return await PoseidonMerkleTree.fromJSON(jsonString);
   }
 }
