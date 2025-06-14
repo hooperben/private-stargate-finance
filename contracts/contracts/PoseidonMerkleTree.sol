@@ -98,6 +98,8 @@ contract PoseidonMerkleTree {
         }
     }
 
+    event LeafInserted(uint256 indexed leafIndex, uint256 indexed leafValue);
+
     function _insert(uint256 _leaf) internal returns (uint256 index) {
         uint256 insertIndex = nextIndex;
         require(insertIndex != MAX_LEAF_INDEX, "Tree Full");
@@ -129,6 +131,8 @@ contract PoseidonMerkleTree {
         roots[newRootIndex] = currentHash;
 
         nextIndex = insertIndex + 1; // Increment nextIndex based on the original insertion index
+
+        emit LeafInserted(insertIndex, currentHash);
 
         return insertIndex; // Return the index where this leaf was inserted
     }
