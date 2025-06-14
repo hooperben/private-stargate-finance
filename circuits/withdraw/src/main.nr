@@ -52,6 +52,8 @@ fn main(
     nullifiers: pub [Field; NOTE_COUNT],
     exit_assets: pub [Field; NOTE_COUNT],
     exit_amounts: pub [Field; NOTE_COUNT],
+    exit_addresses: pub [Field; NOTE_COUNT],
+    exit_address_hashes: pub [Field; NOTE_COUNT],
 ) {
     for i in 0..NOTE_COUNT - 1 {
         if input_notes[i].asset_amount != 0 {
@@ -81,7 +83,10 @@ fn main(
             );
             assert(reconstructed_merkle_root == root);
             assert(exit_assets[i] == input_notes[i].asset_id);
-            assert(exit_amounts[i] == input_notes[i].asset_amount)
+            assert(exit_amounts[i] == input_notes[i].asset_amount);
+
+            let frontrun_hash = poseidon2::Poseidon2::hash([exit_addresses[i]], 1);
+            assert(frontrun_hash == exit_address_hashes[i]);
         }
     }
 }
@@ -91,6 +96,10 @@ fn test_main() {
     let root = 9770762522284292133040204594656801249089743659015207279808423545223243067226;
     let asset_id = 1096978651789611665652906124278561787240579697095;
     let asset_amount = 2;
+
+    let exit_addresses = [asset_id, 0, 0];
+    let exit_hash = poseidon2::Poseidon2::hash([asset_id], 1);
+    let exit_address_hashes = [exit_hash, 0, 0];
 
     let bob_input_note: InputNote = InputNote {
         asset_id,
@@ -136,5 +145,13 @@ fn test_main() {
     let exit_assets = [asset_id, 0, 0];
     let exit_amounts = [asset_amount, 0, 0];
 
-    main(root, input_notes, nullifiers, exit_assets, exit_amounts);
+    main(
+        root,
+        input_notes,
+        nullifiers,
+        exit_assets,
+        exit_amounts,
+        exit_addresses,
+        exit_address_hashes,
+    );
 }
