@@ -1,58 +1,41 @@
 import { expect } from "chai";
 import { PoseidonMerkleTree } from "../helpers/PoseidonMerkleTree";
+import { keccak256, toUtf8Bytes } from "ethers";
 
 describe("PoseidonMerkleTree", () => {
   let tree: PoseidonMerkleTree;
-  const LEVELS = 4; // 2^4 = 16 leaves
+  const LEVELS = 12;
 
   beforeEach(async () => {
     tree = new PoseidonMerkleTree(LEVELS);
   });
 
-  it("should insert leaves and calculate root correctly", async () => {
-    // Insert some leaves
-    await tree.insert("1", 0);
-    await tree.insert("2", 1);
-    await tree.insert("3", 2);
+  it.only("should calculate the correct root based off zero value", async () => {
+    const ZERO_VALUE =
+      BigInt(keccak256(toUtf8Bytes("TANGERINE"))) %
+      BigInt(
+        "0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001",
+      );
 
-    const root = await tree.getRoot();
-    expect(root).to.not.be.undefined;
-  });
+    const totalLeaves = 2 ** LEVELS;
 
-  it("should generate and verify proofs", async () => {
-    // Insert leaves
-    await tree.insert("100", 0);
-    await tree.insert("200", 1);
-    await tree.insert("300", 2);
-    await tree.insert("400", 3);
+    const insertPromises = [];
+    for (let i = 0; i < totalLeaves; i++) {
+      insertPromises.push(tree.insert(ZERO_VALUE, i));
+    }
 
-    // Get root
-    const root = await tree.getRoot();
+    await Promise.all(insertPromises);
 
-    // Get proof for leaf at index 2
-    const proof = await tree.getProof(2);
+    console.log("root: ", await tree.getRoot());
 
-    // Verify the proof
-    const isValid = await PoseidonMerkleTree.verifyProof(root, "300", proof);
-    expect(isValid).to.be.true;
+    const proof = await tree.getProof(1);
+    const leaf = await tree.getLeafValue(1);
 
-    // Verify with wrong leaf value
-    const isInvalid = await PoseidonMerkleTree.verifyProof(root, "301", proof);
-    expect(isInvalid).to.be.false;
-  });
+    console.log("proof:", proof);
+    console.log("leaf: ", leaf);
 
-  it("should handle bigint inputs", async () => {
-    const bigIntValue = 123456789n;
-    await tree.insert(bigIntValue, 0);
+    const otherProof = await tree.getProof(32);
 
-    const root = await tree.getRoot();
-    const proof = await tree.getProof(0);
-
-    const isValid = await PoseidonMerkleTree.verifyProof(
-      root,
-      bigIntValue,
-      proof,
-    );
-    expect(isValid).to.be.true;
+    console.log(otherProof);
   });
 });

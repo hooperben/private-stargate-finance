@@ -124,4 +124,17 @@ export class PoseidonMerkleTree {
 
     return currentHash.equals(root);
   }
+
+  public async getLeafValue(leafIndex: number): Promise<Fr> {
+    if (leafIndex < 0 || leafIndex >= 2 ** this.levels) {
+      throw new Error("Leaf index out of bounds");
+    }
+
+    // Get the leaf value from the hashMap at level 0
+    const leafKey = this.getKey(0, leafIndex);
+    const leafValue = this.hashMap.get(leafKey);
+
+    // If the leaf doesn't exist in the hashMap, return the default value (zero)
+    return leafValue || this.defaultNodes[0];
+  }
 }
