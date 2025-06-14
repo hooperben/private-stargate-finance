@@ -1,3 +1,4 @@
+import { getRandomWithField } from "../helpers";
 import { getTestingAPI, loadPoseidon } from "../helpers/get-testing-api";
 import { PoseidonTest } from "../typechain-types";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
@@ -22,20 +23,30 @@ describe("Testing poseidon equivalencies", async () => {
       "0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001",
     );
 
-    console.log(tester);
+    // console.log(tester);
   });
 
   it("creating a note", async () => {
     // stargate USDC
-    const assetId = "0xc026395860Db2d07ee33e05fE50ed7bD583189C7";
+    const assetId = BigInt("0xc026395860Db2d07ee33e05fE50ed7bD583189C7");
 
-    const amount = "5";
+    const amount = BigInt("5");
     const decimals = 6;
 
-    const secret = "";
-    const owner = "";
+    const secret =
+      2389312107716289199307843900794656424062350252250388738019021107824217896920n;
+    const owner =
+      10036677144260647934022413515521823129584317400947571241312859176539726523915n;
+    const note = await poseidonHash([assetId, amount, owner, secret]);
 
-    // note hash = hash(assetId, amount, secret, owner)
-    const note = poseidonHash([]);
+    console.log(note);
+
+    console.log({
+      hash: BigInt(note.toString()),
+      assetId,
+      amount,
+      owner,
+      secret,
+    });
   });
 });
