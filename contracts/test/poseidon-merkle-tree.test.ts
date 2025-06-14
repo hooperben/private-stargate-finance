@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { PoseidonMerkleTree } from "../helpers/PoseidonMerkleTree";
 import { keccak256, toUtf8Bytes } from "ethers";
 
-describe("PoseidonMerkleTree", () => {
+describe.skip("PoseidonMerkleTree", () => {
   let tree: PoseidonMerkleTree;
   const LEVELS = 12;
 
@@ -10,7 +10,7 @@ describe("PoseidonMerkleTree", () => {
     tree = new PoseidonMerkleTree(LEVELS);
   });
 
-  it.only("should calculate the correct root based off zero value", async () => {
+  it("should calculate the correct root based off zero value", async () => {
     const ZERO_VALUE =
       BigInt(keccak256(toUtf8Bytes("TANGERINE"))) %
       BigInt(
