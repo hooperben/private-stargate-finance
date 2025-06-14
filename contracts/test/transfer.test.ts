@@ -231,6 +231,34 @@ describe("Testing Transfer functionality", () => {
     console.log(`Time to generate proof: ${endTime - startTime}ms`);
     console.log(transferProof);
 
+    await tree.insert(alice_output_hash.toString(), 1);
+    await tree.insert(bob_output_hash.toString(), 2);
+
+    const bobRoot = (await tree.getRoot()).toBigInt();
+    console.log("bobRoot: ", bobRoot);
+
+    const bobProof = await tree.getProof(2);
+    console.log("bobProof: ", bobProof);
+
+    const bobInputNote = createInputNote(
+      BigInt(assetId),
+      bob_amount,
+      BigInt(bob_owner.toString()),
+      bob_owner_secret,
+      bob_note_secret,
+      2n,
+      bobProof.siblings.map((item) => item.toBigInt()),
+      bobProof.indices.map((item) => BigInt(item)),
+    );
+
+    const bob_input_nullifer = await getNullifier(
+      BigInt(bobInputNote.leaf_index),
+      BigInt(bobInputNote.owner),
+      BigInt(bobInputNote.secret),
+      BigInt(assetId),
+      BigInt(bobInputNote.asset_amount),
+    );
+
     // Wait for the transaction to be mined and get the receipt
     // const receipt = await depositTx.wait();
 
