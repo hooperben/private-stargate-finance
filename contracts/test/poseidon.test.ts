@@ -1,15 +1,12 @@
-import { getRandomWithField } from "../helpers";
-import { getTestingAPI, loadPoseidon } from "../helpers/get-testing-api";
+import { getTestingAPI } from "../helpers/get-testing-api";
 import { PoseidonTest } from "../typechain-types";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("Testing poseidon equivalencies", async () => {
-  let Signers: HardhatEthersSigner[];
   let poseidonTest: PoseidonTest;
   let poseidonHash: (inputs: bigint[]) => Promise<{ toString(): string }>;
 
   beforeEach(async () => {
-    ({ poseidonTest, poseidonHash, Signers } = await getTestingAPI());
+    ({ poseidonTest, poseidonHash } = await getTestingAPI());
   });
 
   it("should work", async () => {

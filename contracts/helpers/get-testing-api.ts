@@ -1,5 +1,9 @@
 import { ethers } from "hardhat";
 
+import { UltraHonkBackend } from "@aztec/bb.js";
+import { Noir } from "@noir-lang/noir_js";
+import depositCircuit from "../../circuits/deposit/target/deposit.json";
+
 export const getTestingAPI = async () => {
   const Signers = await ethers.getSigners();
 
@@ -8,7 +12,15 @@ export const getTestingAPI = async () => {
   const poseidonTestFactory = await ethers.getContractFactory("PoseidonTest");
   const poseidonTest = await poseidonTestFactory.deploy();
 
+  // DEPOSIT CIRCUIT
+
+  // @ts-expect-error -- idk
+  const circuitNoir = new Noir(depositCircuit);
+  const circuitBackend = new UltraHonkBackend(depositCircuit.bytecode);
+
   return {
+    circuitNoir,
+    circuitBackend,
     Signers,
     poseidonTest,
     poseidonHash,
