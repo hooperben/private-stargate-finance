@@ -1,6 +1,7 @@
 global HEIGHT: u32 = 12;
 global NOTE_COUNT: u32 = 3;
 
+use std::{collections::map::HashMap, hash::{BuildHasherDefault, poseidon2::Poseidon2Hasher}};
 use std::hash::poseidon2;
 
 struct InputNote {
@@ -18,7 +19,7 @@ struct OutputNote {
     owner: Field,
     secret: Field,
     asset_id: Field,
-    amount: Field,
+    asset_amount: Field,
 }
 
 fn compute_merkle_root(
@@ -58,7 +59,13 @@ fn main(
     input_notes: [InputNote; NOTE_COUNT],
     output_notes: [OutputNote; NOTE_COUNT],
     nullifiers: pub [Field; NOTE_COUNT],
+    output_hashes: pub [Field; NOTE_COUNT],
 ) {
+    let mut inputs_map: HashMap<Field, Field, 12, BuildHasherDefault<Poseidon2Hasher>> =
+        HashMap::default();
+    let mut outputs_map: HashMap<Field, Field, 12, BuildHasherDefault<Poseidon2Hasher>> =
+        HashMap::default();
+
     for i in 0..NOTE_COUNT - 1 {
         // if note is not empty
         if input_notes[i].asset_amount != 0 {
@@ -89,8 +96,40 @@ fn main(
                 input_notes[i].path_indices,
             );
             assert(reconstructed_merkle_root == root);
+
+            let current_asset_amount = inputs_map.get(0).unwrap_or(0);
+            inputs_map.insert(
+                input_notes[i].asset_id,
+                current_asset_amount + input_notes[i].asset_amount,
+            );
+        }
+
+        if output_notes[i].asset_amount != 0 {
+            let output_leaf_note = reconstruct_leaf(
+                output_notes[i].asset_id,
+                output_notes[i].asset_amount,
+                output_notes[i].owner,
+                output_notes[i].secret,
+            );
+            assert(output_leaf_note == output_hashes[i]);
+
+            let current_asset_amount = outputs_map.get(0).unwrap_or(0);
+            outputs_map.insert(
+                output_notes[i].asset_id,
+                current_asset_amount + output_notes[i].asset_amount,
+            )
         }
     }
+
+    // check input and output asset keys are equal
+    // assert(inputs_map.len() == outputs_map.len());
+
+    // for i in 0..NOTE_COUNT - 1 {
+    //     assert(
+    //         inputs_map.get(input_notes[i].asset_id).unwrap_or(0)
+    //             == outputs_map.get(input_notes[i].asset_id).unwrap_or(0),
+    //     );
+    // }
 }
 
 #[test]
@@ -141,7 +180,8 @@ fn test_main() {
         path_indices,
     };
     let nullifiers = [nullifier, 0, 0];
-    let empty_output_note: OutputNote = OutputNote { owner: 0, secret: 0, asset_id: 0, amount: 0 };
+    let empty_output_note: OutputNote =
+        OutputNote { owner: 0, secret: 0, asset_id: 0, asset_amount: 0 };
     let empty_input_note: InputNote = InputNote {
         asset_id: 0,
         asset_amount: 0,
@@ -154,9 +194,11 @@ fn test_main() {
     };
 
     let input_notes = [input_note, empty_input_note, empty_input_note];
-    let outputNotes = [empty_output_note, empty_output_note, empty_output_note];
+    let output_notes = [empty_output_note, empty_output_note, empty_output_note];
 
-    main(root, input_notes, outputNotes, nullifiers);
+    let output_hashes = [0, 0, 0];
+
+    main(root, input_notes, output_notes, nullifiers, output_hashes);
 
     // Uncomment to make test fail
     // main(1, 1);

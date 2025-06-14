@@ -4,6 +4,8 @@ import { Signer } from "ethers";
 import { UltraHonkBackend } from "@aztec/bb.js";
 import { Noir } from "@noir-lang/noir_js";
 import depositCircuit from "../../circuits/deposit/target/deposit.json";
+import transferCircuit from "../../circuits/transfer/target/transfer.json";
+
 import { PoseidonMerkleTree } from "./PoseidonMerkleTree";
 
 import { ContractFactory } from "ethers";
@@ -98,11 +100,17 @@ export const getTestingAPI = async () => {
   const circuitNoir = new Noir(depositCircuit);
   const circuitBackend = new UltraHonkBackend(depositCircuit.bytecode);
 
+  // @ts-expect-error no idea
+  const transferNoir = new Noir(transferCircuit);
+  const transferBackend = new UltraHonkBackend(transferCircuit.bytecode);
+
   const tree = await getMerkleTree();
 
   return {
     circuitNoir,
     circuitBackend,
+    transferNoir,
+    transferBackend,
     Signers,
     poseidonTest,
     poseidonHash,

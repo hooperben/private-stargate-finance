@@ -45,18 +45,6 @@ describe("Testing deposit functionality", () => {
 
     const note = await poseidonHash([assetIdBigInt, amount, owner, secret]);
 
-    console.log(note);
-    console.log();
-
-    console.log({
-      hash: BigInt(note.toString()),
-      assetId,
-      amount,
-      owner,
-      owner_secret,
-      secret,
-    });
-
     const { witness } = await circuitNoir.execute({
       hash: BigInt(note.toString()).toString(),
       asset_id: assetIdBigInt.toString(),
