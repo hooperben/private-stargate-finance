@@ -174,7 +174,6 @@ contract PrivateStargateFinance is PrivateStargateOApp {
 
     function warp(
         uint32 _dstEid,
-        uint256[] memory notes,
         bytes calldata _proof,
         bytes32[] calldata _publicInputs,
         bytes calldata _options
@@ -182,7 +181,51 @@ contract PrivateStargateFinance is PrivateStargateOApp {
         // verify root is in the history of the tree
         require(isKnownRoot(uint256(_publicInputs[0])), "Invalid Root!");
 
-        bytes memory _payload = abi.encode(notes);
+        // verify the warp proof
+        bool isValidProof = warpVerifier.verify(_proof, _publicInputs);
+        require(isValidProof, "Invalid warp proof");
+
+        // publicInputs layout:
+        // 0 = root
+        // 1 - 3 = nullifiers
+        // 4 - 6 = output hashes
+        // 7 - 9 = stargate asset addresses
+        // 10 - 12 = stargate amounts
+
+        // Mark nullifiers as spent
+        for (uint256 i = 1; i <= NOTES_INPUT_LENGTH; i++) {
+            if (_publicInputs[i] != bytes32(0)) {
+                require(
+                    nullifierUsed[_publicInputs[i]] == false,
+                    "Nullifier already spent"
+                );
+                nullifierUsed[_publicInputs[i]] = true;
+                emit NullifierUsed(uint256(_publicInputs[i]));
+            }
+        }
+
+        // Extract non-zero output hashes for cross-chain payload
+        uint256[] memory notes = new uint256[](NOTES_INPUT_LENGTH);
+        uint256 noteCount = 0;
+
+        for (uint256 i = 4; i <= 6; i++) {
+            // output hashes are at indices 4-6
+            if (_publicInputs[i] != bytes32(0)) {
+                notes[noteCount] = uint256(_publicInputs[i]);
+                noteCount++;
+            }
+        }
+
+        // Resize notes array to actual count
+        uint256[] memory finalNotes = new uint256[](noteCount);
+        for (uint256 i = 0; i < noteCount; i++) {
+            finalNotes[i] = notes[i];
+        }
+
+        // TODO: send the stargate asset through stargate based on indices 7-12
+
+        // send the note hashes to insert through LZ
+        bytes memory _payload = abi.encode(finalNotes);
         _lzSend(
             _dstEid,
             _payload,

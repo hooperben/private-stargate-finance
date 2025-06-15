@@ -14,6 +14,8 @@ import {
   emptyOutputNote,
 } from "../helpers/formatting";
 import { parseUnits } from "ethers/lib/utils";
+import { REMOTE_EID } from "../helpers/deploy-mock-tokens";
+import { Options } from "@layerzerolabs/lz-v2-utilities";
 
 describe("Testing Warp functionality", () => {
   let Signers: SignerWithAddress[];
@@ -76,7 +78,7 @@ describe("Testing Warp functionality", () => {
     } = await getTestingAPI());
   });
 
-  it("testing warp functionality", async () => {
+  it.only("testing warp functionality", async () => {
     const assetId = usdcDeployment.address;
     const amount = BigInt("5");
     const secret =
@@ -309,5 +311,31 @@ describe("Testing Warp functionality", () => {
     });
 
     console.log(warpProof);
+
+    console.log(warpProof.publicInputs.length);
+    const options = Options.newOptions()
+      .addExecutorLzReceiveOption(200000, 0)
+      .toHex()
+      .toString();
+
+    const [nativeFee] = await privateStargateFinance.quote(
+      REMOTE_EID,
+      [
+        (await bobOutputNote1Hash).toString(),
+        (await bobOutputNote2Hash).toString(),
+      ],
+      options,
+      false,
+    );
+
+    const warpTx = await privateStargateFinance.warp(
+      REMOTE_EID,
+      warpProof.proof,
+      warpProof.publicInputs,
+      options,
+      {
+        value: nativeFee,
+      },
+    );
   });
 });

@@ -5,7 +5,7 @@ import {OApp, Origin, MessagingFee} from "@layerzerolabs/oapp-evm/contracts/oapp
 
 import "./PoseidonMerkleTree.sol";
 
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 abstract contract PrivateStargateOApp is PoseidonMerkleTree, OApp {
     constructor(
@@ -23,8 +23,8 @@ abstract contract PrivateStargateOApp is PoseidonMerkleTree, OApp {
         // Decode the payload as uint256[]
         uint256[] memory notes = abi.decode(payload, (uint256[]));
 
-        // console.log(notes[0]);
-        // console.log(notes[1]);
+        console.log(notes[0]);
+        console.log(notes[1]);
 
         // Insert each note into the Merkle tree
         for (uint256 i = 0; i < notes.length; i++) {
