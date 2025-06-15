@@ -226,7 +226,7 @@ fn test_main() {
     let output_notes = [alice_output_note, bob_output_note, empty_output_note];
     let output_hashes = [alice_output_hash, bob_output_hash, 0];
 
-    let stargate_assets = [bob_output_note.asset_id, 0, 0];
+    let stargate_assets = [0, bob_output_note.asset_id, 0];
     let startgate_amounts = [0, bob_output_note.asset_amount, 0];
 
     main(
