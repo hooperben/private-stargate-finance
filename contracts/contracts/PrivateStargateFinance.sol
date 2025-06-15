@@ -8,10 +8,15 @@ import {TransferVerifier} from "./verifiers/TransferVerifier.sol";
 import {WithdrawVerifier} from "./verifiers/WithdrawVerifier.sol";
 import {WarpVerifier} from "./verifiers/WarpVerifier.sol";
 
+import {IStargatePool} from "./IStargatePool.sol";
+
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+
+import {IOFT, SendParam, OFTReceipt} from "@layerzerolabs/oft-evm/contracts/interfaces/IOFT.sol";
+import "hardhat/console.sol";
 
 uint256 constant NOTES_INPUT_LENGTH = 3;
 
@@ -211,6 +216,31 @@ contract PrivateStargateFinance is PrivateStargateOApp, AccessControl {
         }
 
         // Extract non-zero output hashes for cross-chain payload
+        uint256[] memory finalNotes = _extractOutputHashes(_publicInputs);
+
+        // // Send the stargate assets
+
+        // send the note hashes to insert through LZ
+        bytes memory _payload = abi.encode(finalNotes);
+        _lzSend(
+            _dstEid,
+            _payload,
+            _options,
+            // Fee in native gas and ZRO token.
+            MessagingFee(msg.value, 0),
+            // Refund address in case of failed source message.
+            payable(address(this))
+        );
+        _sendStargateAssets(_dstEid, _publicInputs, _options);
+    }
+
+    fallback() external payable {}
+
+    receive() external payable {}
+
+    function _extractOutputHashes(
+        bytes32[] calldata _publicInputs
+    ) internal pure returns (uint256[] memory) {
         uint256[] memory notes = new uint256[](NOTES_INPUT_LENGTH);
         uint256 noteCount = 0;
 
@@ -228,18 +258,60 @@ contract PrivateStargateFinance is PrivateStargateOApp, AccessControl {
             finalNotes[i] = notes[i];
         }
 
-        // TODO: send the stargate asset through stargate based on indices 7-12
+        return finalNotes;
+    }
 
-        // send the note hashes to insert through LZ
-        bytes memory _payload = abi.encode(finalNotes);
-        _lzSend(
+    function _sendStargateAssets(
+        uint32 _dstEid,
+        bytes32[] calldata _publicInputs,
+        bytes calldata _options
+    ) internal {
+        for (uint256 i = 7; i < 10; i++) {
+            address stargateAssetAddress = address(
+                uint160(uint256(_publicInputs[i]))
+            );
+
+            if (stargateAssetAddress != address(0)) {
+                _sendSingleStargateAsset(
+                    _dstEid,
+                    stargateAssetAddress,
+                    uint256(_publicInputs[i + 3]), // amount is at i+3 (indices 10-12)
+                    _options
+                );
+            }
+        }
+    }
+
+    function _sendSingleStargateAsset(
+        uint32 _dstEid,
+        address stargateAssetAddress,
+        uint256 amount,
+        bytes calldata _options
+    ) internal {
+        uint256 adjustedAmount = amount *
+            10 ** ERC20(stargateAssetAddress).decimals();
+
+        SendParam memory sendParam = SendParam(
             _dstEid,
-            _payload,
+            peers[_dstEid],
+            adjustedAmount,
+            adjustedAmount,
             _options,
-            // Fee in native gas and ZRO token.
-            MessagingFee(msg.value, 0),
-            // Refund address in case of failed source message.
+            "",
+            ""
+        );
+
+        MessagingFee memory fee = IOFT(stargateAssetAddress).quoteSend(
+            sendParam,
+            false
+        );
+
+        IOFT(stargateAssetAddress).send{value: fee.nativeFee}(
+            sendParam,
+            fee,
             payable(msg.sender)
         );
+
+        console.log("sent");
     }
 }

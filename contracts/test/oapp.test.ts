@@ -35,7 +35,7 @@ describe("Testing OApp functionality", async () => {
 
     // Defining extra message execution options for the send operation
     const options = Options.newOptions()
-      .addExecutorLzReceiveOption(200000, 0)
+      .addExecutorLzReceiveOption(600000, 0)
       .toHex()
       .toString();
 
@@ -70,7 +70,7 @@ describe("Testing OApp functionality", async () => {
   it("PSF OApp should work as expected", async () => {
     // Defining extra message execution options for the send operation
     const options = Options.newOptions()
-      .addExecutorLzReceiveOption(200000, 0)
+      .addExecutorLzReceiveOption(600000, 0)
       .toHex()
       .toString();
 

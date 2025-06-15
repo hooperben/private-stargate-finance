@@ -13,7 +13,7 @@ import {
   createOutputNote,
   emptyOutputNote,
 } from "../helpers/formatting";
-import { parseUnits } from "ethers/lib/utils";
+import { parseEther, parseUnits } from "ethers/lib/utils";
 import { REMOTE_EID } from "../helpers/deploy-mock-tokens";
 import { Options } from "@layerzerolabs/lz-v2-utilities";
 
@@ -34,6 +34,9 @@ describe("Testing Warp functionality", () => {
   let tree: PoseidonMerkleTree;
 
   let usdcDeployment: Contract;
+  let lzOFTDeploymentBase: Contract;
+  let lzOFTDeploymentRemote: Contract;
+
   const getNullifier = async (
     leafIndex: bigint,
     owner: bigint,
@@ -66,6 +69,8 @@ describe("Testing Warp functionality", () => {
     Signers = await ethers.getSigners();
     ({
       usdcDeployment,
+      lzOFTDeploymentBase,
+      lzOFTDeploymentRemote,
       poseidonHash,
       depositNoir,
       depositBackend,
@@ -79,7 +84,7 @@ describe("Testing Warp functionality", () => {
   });
 
   it.only("testing warp functionality", async () => {
-    const assetId = usdcDeployment.address;
+    const assetId = lzOFTDeploymentBase.address;
     const amount = BigInt("5");
     const secret =
       2389312107716289199307843900794656424062350252250388738019021107824217896920n;
@@ -103,8 +108,8 @@ describe("Testing Warp functionality", () => {
     });
 
     // approve PSF to move USDC tokens
-    const parseAmount = parseUnits("5", 6);
-    const approveTx = await usdcDeployment
+    const parseAmount = parseUnits("5", 18);
+    const approveTx = await lzOFTDeploymentBase
       .connect(Signers[0])
       .approve(privateStargateFinance.address, parseAmount);
     await approveTx.wait();
@@ -310,13 +315,22 @@ describe("Testing Warp functionality", () => {
       keccak: true,
     });
 
-    console.log(warpProof);
+    const tokensToSend = parseEther("1");
 
-    console.log(warpProof.publicInputs.length);
     const options = Options.newOptions()
-      .addExecutorLzReceiveOption(200000, 0)
+      .addExecutorLzReceiveOption(600000, 0)
       .toHex()
       .toString();
+
+    const oftSendParam = [
+      REMOTE_EID, // REMOTE EID
+      ethers.utils.zeroPad(Signers[0].address, 32),
+      tokensToSend,
+      tokensToSend,
+      options,
+      "0x",
+      "0x",
+    ];
 
     const [nativeFee] = await privateStargateFinance.quote(
       REMOTE_EID,
@@ -334,7 +348,7 @@ describe("Testing Warp functionality", () => {
       warpProof.publicInputs,
       options,
       {
-        value: nativeFee,
+        value: parseEther("10"),
       },
     );
   });
