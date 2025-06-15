@@ -162,4 +162,21 @@ contract PrivateStargateFinance is PrivateStargateOApp {
             }
         }
     }
+
+    function warp(
+        uint32 _dstEid,
+        uint256[] memory notes,
+        bytes calldata _options
+    ) public payable {
+        bytes memory _payload = abi.encode(notes);
+        _lzSend(
+            _dstEid,
+            _payload,
+            _options,
+            // Fee in native gas and ZRO token.
+            MessagingFee(msg.value, 0),
+            // Refund address in case of failed source message.
+            payable(msg.sender)
+        );
+    }
 }

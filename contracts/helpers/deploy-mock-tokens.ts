@@ -1,7 +1,7 @@
 import { ethers, deployments, network } from "hardhat";
 
-const BASE_EID = 1;
-const REMOTE_EID = 2;
+export const BASE_EID = 1;
+export const REMOTE_EID = 2;
 
 const setUpLZ = async () => {
   if (network.name !== "hardhat" && network.name !== "localhost")

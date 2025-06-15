@@ -17,6 +17,7 @@ import { parseEther, parseUnits } from "ethers/lib/utils";
 import { expect } from "chai";
 
 import { Options } from "@layerzerolabs/lz-v2-utilities";
+import { REMOTE_EID } from "../helpers/deploy-mock-tokens";
 
 describe("Testing OApp functionality", async () => {
   let Signers: SignerWithAddress[];
@@ -60,7 +61,6 @@ describe("Testing OApp functionality", async () => {
     const deployerBalanceBefore = await lzOFTDeploymentRemote.balanceOf(
       Signers[0].address,
     );
-    console.log(deployerBalanceBefore);
 
     // Defining the amount of tokens to send and constructing the parameters for the send operation
     const tokensToSend = parseEther("1");
@@ -72,7 +72,7 @@ describe("Testing OApp functionality", async () => {
       .toString();
 
     const sendParam = [
-      2n, // REMOTE EID
+      REMOTE_EID, // REMOTE EID
       ethers.utils.zeroPad(Signers[0].address, 32),
       tokensToSend,
       tokensToSend,
@@ -97,5 +97,24 @@ describe("Testing OApp functionality", async () => {
     expect(BigInt(deployerBalanceAfter - deployerBalanceBefore)).eq(
       tokensToSend.toBigInt(),
     );
+  });
+
+  it.only("PSF OApp should work as expected", async () => {
+    // Defining extra message execution options for the send operation
+    const options = Options.newOptions()
+      .addExecutorLzReceiveOption(200000, 0)
+      .toHex()
+      .toString();
+
+    const notesToSend = [12345n, 56789n];
+    const [nativeFee] = await privateStargateFinance.quote(
+      REMOTE_EID,
+      notesToSend,
+      options,
+      false,
+    );
+    const warpTx = await privateStargateFinance.warp(2n, notesToSend, options, {
+      value: nativeFee,
+    });
   });
 });

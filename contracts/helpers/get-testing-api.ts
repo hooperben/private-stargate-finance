@@ -1,6 +1,6 @@
 import { Signer } from "ethers";
 import { ethers } from "hardhat";
-import { deployMockTokens } from "./deploy-mock-tokens";
+import { BASE_EID, deployMockTokens, REMOTE_EID } from "./deploy-mock-tokens";
 import { deployPSF } from "./deploy-psf";
 import { deployVerifiers } from "./deploy-verifiers";
 import { getNoirClasses } from "./get-noir-classes";
@@ -68,6 +68,18 @@ export const getTestingAPI = async () => {
     verifiers.transfer,
     verifiers.withdraw,
   );
+
+  // wire up PSFs
+  await baseEndpoint.setDestLzEndpoint(
+    remotePSF.address,
+    remoteEndpoint.address,
+  );
+  await remoteEndpoint.setDestLzEndpoint(basePSF.address, baseEndpoint.address);
+  await basePSF.setPeer(
+    REMOTE_EID,
+    ethers.utils.zeroPad(remotePSF.address, 32),
+  );
+  await remotePSF.setPeer(BASE_EID, ethers.utils.zeroPad(basePSF.address, 32));
 
   const {
     depositNoir,

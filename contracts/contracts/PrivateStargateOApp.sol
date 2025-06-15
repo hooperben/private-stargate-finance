@@ -5,6 +5,8 @@ import {OApp, Origin, MessagingFee} from "@layerzerolabs/oapp-evm/contracts/oapp
 
 import "./PoseidonMerkleTree.sol";
 
+// import "hardhat/console.sol";
+
 abstract contract PrivateStargateOApp is PoseidonMerkleTree, OApp {
     constructor(
         address _endpoint,
@@ -21,9 +23,28 @@ abstract contract PrivateStargateOApp is PoseidonMerkleTree, OApp {
         // Decode the payload as uint256[]
         uint256[] memory notes = abi.decode(payload, (uint256[]));
 
+        // console.log(notes[0]);
+        // console.log(notes[1]);
+
         // Insert each note into the Merkle tree
         for (uint256 i = 0; i < notes.length; i++) {
             _insert(notes[i]);
         }
+    }
+
+    function quote(
+        uint32 _dstEid, // Destination chain's endpoint ID.
+        uint256[] memory notes,
+        bytes calldata _options,
+        bool _payInLzToken // boolean for which token to return fee in
+    ) public view returns (uint256 nativeFee, uint256 lzTokenFee) {
+        bytes memory _payload = abi.encode(notes);
+        MessagingFee memory fee = _quote(
+            _dstEid,
+            _payload,
+            _options,
+            _payInLzToken
+        );
+        return (fee.nativeFee, fee.lzTokenFee);
     }
 }
