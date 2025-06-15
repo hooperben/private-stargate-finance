@@ -117,7 +117,6 @@ describe("Testing Transfer functionality", () => {
 
     // get the merkle proof to spend our input note
     const merkleProof = await tree.getProof(0);
-    const leaf = await tree.getLeafValue(0);
     const leafIndex = 0n;
 
     // create the input note to spend
@@ -197,7 +196,14 @@ describe("Testing Transfer functionality", () => {
       output_hashes: outputHashes.map((item) => item.toString()),
     });
 
-    const transferProof = await transferBackend.generateProof(transferWitness);
+    const transferProof = await transferBackend.generateProof(transferWitness, {
+      keccak: true,
+    });
+
+    // submit the transfer TX (as relayer)
+    await privateStargateFinance
+      .connect(Signers[10])
+      .transfer(transferProof.proof, transferProof.publicInputs);
 
     await tree.insert(alice_output_hash.toString(), 1);
     await tree.insert(bob_output_hash.toString(), 2);

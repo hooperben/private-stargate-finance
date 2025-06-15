@@ -11,10 +11,14 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
+uint256 constant NOTES_INPUT_LENGTH = 3;
+
 contract PrivateStargateFinance is PrivateStargateOApp {
     DepositVerifier public depositVerifier;
     TransferVerifier public transferVerifier;
     WithdrawVerifier public withdrawVerifier;
+
+    mapping(bytes32 => bool) public nullifierUsed;
 
     constructor(
         address _endpoint,
@@ -63,5 +67,40 @@ contract PrivateStargateFinance is PrivateStargateOApp {
         _insert(uint256(_publicInputs[0]));
     }
 
-    function transfer() public {}
+    event NullifierUsed(uint256 indexed nullifier);
+
+    function transfer(
+        bytes calldata _proof,
+        bytes32[] calldata _publicInputs
+    ) public {
+        // verify the proof
+        bool isValidProof = transferVerifier.verify(_proof, _publicInputs);
+        require(isValidProof, "Invalid transfer proof");
+
+        // if proof is valid, write nullifiers as spent
+        for (uint256 i = 0; i < NOTES_INPUT_LENGTH - 1; i++) {
+            if (_publicInputs[i] != bytes32(0)) {
+                // check not spent
+                require(
+                    nullifierUsed[_publicInputs[i]] == false,
+                    "Nullifier already spent"
+                );
+                // mark as spent
+                nullifierUsed[_publicInputs[i]] = true;
+
+                emit NullifierUsed(uint256(_publicInputs[i]));
+            }
+        }
+
+        // and insert output note commitments
+        for (
+            uint256 i = NOTES_INPUT_LENGTH;
+            i < NOTES_INPUT_LENGTH * 2 - 1;
+            i++
+        ) {
+            if (_publicInputs[i] != bytes32(0)) {
+                _insert(uint256(_publicInputs[i]));
+            }
+        }
+    }
 }
