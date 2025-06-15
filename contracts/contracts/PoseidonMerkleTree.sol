@@ -3,6 +3,8 @@ pragma solidity ^0.8.24;
 
 import "./utils/Poseidon2.sol";
 
+import "hardhat/console.sol";
+
 contract PoseidonMerkleTree {
     using Field for *;
 
@@ -154,5 +156,23 @@ contract PoseidonMerkleTree {
             poseidon2Hasher
                 .hash_2(uint256(_left).toField(), uint256(_right).toField())
                 .toUint256();
+    }
+
+    function isKnownRoot(uint256 _root) public view returns (bool) {
+        if (_root == 0) {
+            return false;
+        }
+        uint32 _currentRootIndex = currentRootIndex;
+        uint32 i = _currentRootIndex;
+        do {
+            if (_root == roots[i]) {
+                return true;
+            }
+            if (i == 0) {
+                i = ROOT_HISTORY_SIZE;
+            }
+            i--;
+        } while (i != _currentRootIndex);
+        return false;
     }
 }

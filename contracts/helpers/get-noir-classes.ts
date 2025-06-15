@@ -4,6 +4,7 @@ import { Noir } from "@noir-lang/noir_js";
 import depositCircuit from "../../circuits/deposit/target/deposit.json";
 import transferCircuit from "../../circuits/transfer/target/transfer.json";
 import withdrawCircuit from "../../circuits/withdraw/target/withdraw.json";
+import warpCircuit from "../../circuits/warp/target/warp.json";
 
 export const getNoirClasses = async () => {
   // @ts-expect-error no idea
@@ -18,6 +19,10 @@ export const getNoirClasses = async () => {
   const withdrawNoir = new Noir(withdrawCircuit);
   const withdrawBackend = new UltraHonkBackend(withdrawCircuit.bytecode);
 
+  // @ts-expect-error no idea
+  const warpNoir = new Noir(warpCircuit);
+  const warpBackend = new UltraHonkBackend(warpCircuit.bytecode);
+
   return {
     depositNoir,
     depositBackend,
@@ -25,5 +30,7 @@ export const getNoirClasses = async () => {
     transferBackend,
     withdrawNoir,
     withdrawBackend,
+    warpNoir,
+    warpBackend,
   };
 };

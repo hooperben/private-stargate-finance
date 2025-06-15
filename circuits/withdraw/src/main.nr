@@ -47,7 +47,7 @@ fn reconstruct_leaf(asset_id: Field, asset_amount: Field, owner: Field, secret: 
 }
 
 fn main(
-    root: Field,
+    root: pub Field,
     input_notes: [InputNote; NOTE_COUNT],
     nullifiers: pub [Field; NOTE_COUNT],
     exit_assets: pub [Field; NOTE_COUNT],

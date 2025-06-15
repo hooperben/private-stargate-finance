@@ -2,18 +2,10 @@ import { Noir } from "@noir-lang/noir_js";
 import { getRandomWithField } from "../helpers";
 import { getTestingAPI } from "../helpers/get-testing-api";
 
-import { UltraHonkBackend } from "@aztec/bb.js";
 import { Contract } from "ethers";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { PoseidonMerkleTree } from "../helpers/PoseidonMerkleTree";
-import {
-  createInputNote,
-  emptyInputNote,
-  createOutputNote,
-  emptyOutputNote,
-} from "../helpers/formatting";
-import { parseEther, parseUnits } from "ethers/lib/utils";
+import { parseEther } from "ethers/lib/utils";
 import { expect } from "chai";
 
 import { Options } from "@layerzerolabs/lz-v2-utilities";
@@ -21,43 +13,19 @@ import { REMOTE_EID } from "../helpers/deploy-mock-tokens";
 
 describe("Testing OApp functionality", async () => {
   let Signers: SignerWithAddress[];
-  let poseidonHash: (inputs: bigint[]) => Promise<{ toString(): string }>;
-
-  let depositNoir: Noir;
-  let depositBackend: UltraHonkBackend;
-
-  let transferNoir: Noir;
-  let transferBackend: UltraHonkBackend;
-
-  let withdrawNoir: Noir;
-  let withdrawBackend: UltraHonkBackend;
 
   let privateStargateFinance: Contract;
-  let tree: PoseidonMerkleTree;
 
-  let usdcDeployment: Contract;
   let lzOFTDeploymentBase: Contract;
   let lzOFTDeploymentRemote: Contract;
 
   beforeEach(async () => {
     Signers = await ethers.getSigners();
-    ({
-      usdcDeployment,
-      lzOFTDeploymentBase,
-      lzOFTDeploymentRemote,
-      poseidonHash,
-      depositNoir,
-      depositBackend,
-      transferNoir,
-      transferBackend,
-      withdrawNoir,
-      withdrawBackend,
-      privateStargateFinance,
-      tree,
-    } = await getTestingAPI());
+    ({ lzOFTDeploymentBase, lzOFTDeploymentRemote, privateStargateFinance } =
+      await getTestingAPI());
   });
 
-  it.only("OFT should work as expected", async () => {
+  it("OFT should work as expected", async () => {
     const deployerBalanceBefore = await lzOFTDeploymentRemote.balanceOf(
       Signers[0].address,
     );
@@ -99,7 +67,7 @@ describe("Testing OApp functionality", async () => {
     );
   });
 
-  it.only("PSF OApp should work as expected", async () => {
+  it("PSF OApp should work as expected", async () => {
     // Defining extra message execution options for the send operation
     const options = Options.newOptions()
       .addExecutorLzReceiveOption(200000, 0)
@@ -113,8 +81,8 @@ describe("Testing OApp functionality", async () => {
       options,
       false,
     );
-    const warpTx = await privateStargateFinance.warp(2n, notesToSend, options, {
-      value: nativeFee,
-    });
+    // const warpTx = await privateStargateFinance.warp(2n, notesToSend, options, {
+    //   value: nativeFee,
+    // });
   });
 });

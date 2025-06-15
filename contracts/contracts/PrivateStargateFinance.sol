@@ -12,12 +12,18 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
+import "hardhat/console.sol";
+
 uint256 constant NOTES_INPUT_LENGTH = 3;
 
 uint256 constant EXIT_ASSET_INDEX = 1;
 uint256 constant EXIT_AMOUNT_INDEX = 2;
 uint256 constant EXIT_ADDRESSES_INDEX = 3;
 uint256 constant EXIT_ADDRESS_HASHES_INDEX = 4;
+
+uint256 constant EXIT_ASSET_START_INDEX = 4;
+uint256 constant EXIT_AMOUNT_START_INDEX = 7;
+uint256 constant EXIT_ADDRESSES_START_INDEX = 10;
 
 contract PrivateStargateFinance is PrivateStargateOApp {
     DepositVerifier public depositVerifier;
@@ -59,20 +65,19 @@ contract PrivateStargateFinance is PrivateStargateOApp {
 
         // VERIFY PROOF
         bool isValidProof = depositVerifier.verify(_proof, _publicInputs);
-
         require(isValidProof, "Invalid deposit proof!");
 
+        // CHECK INPUT ADDRESS AND AMOUNT MATCH PROOF INPUTS
         require(
             _erc20 == address(uint160(uint256(_publicInputs[1]))),
             "ERC20 address mismatch"
         );
-
         require(
             _amount == uint64(uint256(_publicInputs[2])),
             "Address amount incorrect"
         );
 
-        // insert note into the tree
+        // INSERT NOTE INTO TREE
         _insert(uint256(_publicInputs[0]));
     }
 
@@ -82,12 +87,15 @@ contract PrivateStargateFinance is PrivateStargateOApp {
         bytes calldata _proof,
         bytes32[] calldata _publicInputs
     ) public {
+        // verify the root is in the trees history
+        require(isKnownRoot(uint256(_publicInputs[0])), "Invalid Root!");
+
         // verify the proof
         bool isValidProof = transferVerifier.verify(_proof, _publicInputs);
         require(isValidProof, "Invalid transfer proof");
 
         // if proof is valid, write nullifiers as spent
-        for (uint256 i = 0; i < NOTES_INPUT_LENGTH - 1; i++) {
+        for (uint256 i = 1; i < NOTES_INPUT_LENGTH + 1; i++) {
             if (_publicInputs[i] != bytes32(0)) {
                 // check not spent
                 require(
@@ -103,11 +111,13 @@ contract PrivateStargateFinance is PrivateStargateOApp {
 
         // and insert output note commitments
         for (
-            uint256 i = NOTES_INPUT_LENGTH;
-            i < NOTES_INPUT_LENGTH * 2 - 1;
+            uint256 i = NOTES_INPUT_LENGTH + 1;
+            i < NOTES_INPUT_LENGTH + 1 + NOTES_INPUT_LENGTH;
             i++
         ) {
             if (_publicInputs[i] != bytes32(0)) {
+                console.log("inserting ncs: ");
+                console.logBytes32(_publicInputs[i]);
                 _insert(uint256(_publicInputs[i]));
             }
         }
@@ -117,12 +127,13 @@ contract PrivateStargateFinance is PrivateStargateOApp {
         bytes calldata _proof,
         bytes32[] calldata _publicInputs
     ) public {
+        require(isKnownRoot(uint256(_publicInputs[0])), "Invalid Root!");
         // Verify the withdrawal proof
         bool isValidProof = withdrawVerifier.verify(_proof, _publicInputs);
         require(isValidProof, "Invalid withdraw proof");
 
-        // Mark nullifiers as spent
-        for (uint256 i = 0; i < NOTES_INPUT_LENGTH - 1; i++) {
+        // Mark nullifiers as spent - FIX: include all 3 nullifiers
+        for (uint256 i = 1; i <= NOTES_INPUT_LENGTH; i++) {
             if (_publicInputs[i] != bytes32(0)) {
                 // check not spent
                 require(
@@ -136,13 +147,11 @@ contract PrivateStargateFinance is PrivateStargateOApp {
             }
         }
 
-        // Process withdrawals
-        for (uint256 i = 0; i < NOTES_INPUT_LENGTH - 1; i++) {
-            uint256 assetIndex = EXIT_ASSET_INDEX * NOTES_INPUT_LENGTH + i;
-            uint256 amountIndex = EXIT_AMOUNT_INDEX * NOTES_INPUT_LENGTH + i;
-            uint256 addressIndex = EXIT_ADDRESSES_INDEX *
-                NOTES_INPUT_LENGTH +
-                i;
+        // Process withdrawals - FIX: correct index calculations
+        for (uint256 i = 0; i < NOTES_INPUT_LENGTH; i++) {
+            uint256 assetIndex = EXIT_ASSET_START_INDEX + i;
+            uint256 amountIndex = EXIT_AMOUNT_START_INDEX + i;
+            uint256 addressIndex = EXIT_ADDRESSES_START_INDEX + i;
 
             address exitAsset = address(
                 uint160(uint256(_publicInputs[assetIndex]))
@@ -170,8 +179,13 @@ contract PrivateStargateFinance is PrivateStargateOApp {
     function warp(
         uint32 _dstEid,
         uint256[] memory notes,
+        bytes calldata _proof,
+        bytes32[] calldata _publicInputs,
         bytes calldata _options
     ) public payable {
+        // verify root is in the history of the tree
+        require(isKnownRoot(uint256(_publicInputs[0])), "Invalid Root!");
+
         bytes memory _payload = abi.encode(notes);
         _lzSend(
             _dstEid,
