@@ -7,55 +7,13 @@ import { Contract } from "ethers";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { PoseidonMerkleTree } from "../helpers/PoseidonMerkleTree";
-
-const createInputNote = (
-  assetId: bigint,
-  amount: bigint,
-  owner: bigint,
-  owner_secret: bigint,
-  secret: bigint,
-  leaf_index: bigint,
-  path: bigint[],
-  path_indices: bigint[],
-) => {
-  return {
-    asset_id: assetId.toString(),
-    asset_amount: amount.toString(),
-    owner: owner.toString(),
-    owner_secret: owner_secret.toString(),
-    secret: secret.toString(),
-    leaf_index: leaf_index.toString(),
-    path: path.map((item) => item.toString()),
-    path_indices: path_indices.map((item) => item.toString()),
-  };
-};
-
-const emptyInputNote = createInputNote(
-  0n,
-  0n,
-  0n,
-  0n,
-  0n,
-  0n,
-  [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n],
-  [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n],
-);
-
-const createOutputNote = (
-  owner: bigint,
-  secret: bigint,
-  asset_id: bigint,
-  asset_amount: bigint,
-) => {
-  return {
-    owner: owner.toString(),
-    secret: secret.toString(),
-    asset_id: asset_id.toString(),
-    asset_amount: asset_amount.toString(),
-  };
-};
-
-const emptyOutputNote = createOutputNote(0n, 0n, 0n, 0n);
+import {
+  createInputNote,
+  emptyInputNote,
+  createOutputNote,
+  emptyOutputNote,
+} from "../helpers/formatting";
+import { parseUnits } from "ethers/lib/utils";
 
 describe("Testing Transfer functionality", () => {
   let Signers: SignerWithAddress[];
@@ -69,6 +27,22 @@ describe("Testing Transfer functionality", () => {
 
   let privateStargateFinance: Contract;
   let tree: PoseidonMerkleTree;
+
+  let usdcDeployment: Contract;
+
+  beforeEach(async () => {
+    Signers = await ethers.getSigners();
+    ({
+      usdcDeployment,
+      poseidonHash,
+      circuitNoir,
+      circuitBackend,
+      transferNoir,
+      transferBackend,
+      privateStargateFinance,
+      tree,
+    } = await getTestingAPI());
+  });
 
   const getNullifier = async (
     leafIndex: bigint,
@@ -98,27 +72,15 @@ describe("Testing Transfer functionality", () => {
     return noteHash;
   };
 
-  beforeEach(async () => {
-    Signers = await ethers.getSigners();
-    ({
-      poseidonHash,
-      circuitNoir,
-      circuitBackend,
-      transferNoir,
-      transferBackend,
-      privateStargateFinance,
-      tree,
-    } = await getTestingAPI());
-  });
-
   it.only("testing transfer functionality", async () => {
-    const assetId = "0xc026395860Db2d07ee33e05fE50ed7bD583189C7";
+    const assetId = usdcDeployment.address;
     const amount = BigInt("5");
     const secret =
       2389312107716289199307843900794656424062350252250388738019021107824217896920n;
     const owner_secret =
       10036677144260647934022413515521823129584317400947571241312859176539726523915n;
     const owner = BigInt((await poseidonHash([owner_secret])).toString());
+
     const assetIdBigInt = BigInt(assetId);
     const note = await poseidonHash([assetIdBigInt, amount, owner, secret]);
 
@@ -130,8 +92,18 @@ describe("Testing Transfer functionality", () => {
       secret: secret.toString(),
     });
 
-    const depositProof = await circuitBackend.generateProof(witness);
+    const depositProof = await circuitBackend.generateProof(witness, {
+      keccak: true,
+    });
 
+    // approve PSF to move USDC tokens
+    const parseAmount = parseUnits("5", 6);
+    const approveTx = await usdcDeployment
+      .connect(Signers[0])
+      .approve(privateStargateFinance.address, parseAmount);
+    await approveTx.wait();
+
+    // deposit the tokens into the pool
     await privateStargateFinance.deposit(
       assetId,
       amount,
@@ -225,20 +197,13 @@ describe("Testing Transfer functionality", () => {
       output_hashes: outputHashes.map((item) => item.toString()),
     });
 
-    const startTime = performance.now();
     const transferProof = await transferBackend.generateProof(transferWitness);
-    const endTime = performance.now();
-    console.log(`Time to generate proof: ${endTime - startTime}ms`);
-    console.log(transferProof);
 
     await tree.insert(alice_output_hash.toString(), 1);
     await tree.insert(bob_output_hash.toString(), 2);
 
     const bobRoot = (await tree.getRoot()).toBigInt();
-    console.log("bobRoot: ", bobRoot);
-
     const bobProof = await tree.getProof(2);
-    console.log("bobProof: ", bobProof);
 
     const bobInputNote = createInputNote(
       BigInt(assetId),

@@ -9,7 +9,7 @@ cd ../circuits/deposit/
 
 nargo compile
 
-bb write_vk -b ./target/deposit.json -o ./target
+bb write_vk -b ./target/deposit.json -o ./target --oracle_hash keccak
 bb write_solidity_verifier -k ./target/vk -o ./target/contract.sol
 
 mkdir -p ../../contracts/contracts/verifiers
@@ -27,7 +27,7 @@ echo "building deposit verifier (2/3)"
 cd "../transfer"
 
 nargo compile
-bb write_vk -b ./target/transfer.json -o ./target
+bb write_vk -b ./target/transfer.json -o ./target --oracle_hash keccak
 bb write_solidity_verifier -k ./target/vk -o ./target/contract.sol
 
 mv ./target/contract.sol ../../contracts/contracts/verifiers/TransferVerifier.sol || { echo "Error: Failed to copy contract.sol"; exit 1; }
@@ -44,7 +44,7 @@ echo "building withdraw verifier (3/3)"
 cd "../withdraw"
 
 nargo compile
-bb write_vk -b ./target/withdraw.json -o ./target
+bb write_vk -b ./target/withdraw.json -o ./target --oracle_hash keccak
 bb write_solidity_verifier -k ./target/vk -o ./target/contract.sol
 
 mv ./target/contract.sol ../../contracts/contracts/verifiers/WithdrawVerifier.sol || { echo "Error: Failed to copy contract.sol"; exit 1; }

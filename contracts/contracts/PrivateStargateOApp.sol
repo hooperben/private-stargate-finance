@@ -2,15 +2,14 @@
 pragma solidity ^0.8.24;
 
 import {OApp, Origin, MessagingFee} from "@layerzerolabs/oapp-evm/contracts/oapp/OApp.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./PoseidonMerkleTree.sol";
 
-contract PrivateStargateOApp is PoseidonMerkleTree, OApp {
+abstract contract PrivateStargateOApp is PoseidonMerkleTree, OApp {
     constructor(
         address _endpoint,
         address _owner
-    ) PoseidonMerkleTree(12) OApp(_endpoint, _owner) Ownable(_owner) {}
+    ) PoseidonMerkleTree(12) OApp(_endpoint, _owner) {}
 
     function _lzReceive(
         Origin calldata,
