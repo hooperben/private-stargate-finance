@@ -14,6 +14,7 @@ import {
   emptyOutputNote,
 } from "../helpers/formatting";
 import { parseUnits } from "ethers/lib/utils";
+import { expect } from "chai";
 
 describe("Testing Withdraw functionality", () => {
   let Signers: SignerWithAddress[];
@@ -24,6 +25,9 @@ describe("Testing Withdraw functionality", () => {
 
   let transferNoir: Noir;
   let transferBackend: UltraHonkBackend;
+
+  let withdrawNoir: Noir;
+  let withdrawBackend: UltraHonkBackend;
 
   let privateStargateFinance: Contract;
   let tree: PoseidonMerkleTree;
@@ -39,6 +43,8 @@ describe("Testing Withdraw functionality", () => {
       depositBackend,
       transferNoir,
       transferBackend,
+      withdrawNoir,
+      withdrawBackend,
       privateStargateFinance,
       tree,
     } = await getTestingAPI());
@@ -72,7 +78,7 @@ describe("Testing Withdraw functionality", () => {
     return noteHash;
   };
 
-  it("testing withdraw functionality", async () => {
+  it.only("testing withdraw functionality", async () => {
     const assetId = usdcDeployment.address;
     const amount = BigInt("5");
     const secret =
@@ -230,20 +236,55 @@ describe("Testing Withdraw functionality", () => {
       BigInt(bobInputNote.asset_amount),
     );
 
-    // Wait for the transaction to be mined and get the receipt
-    // const receipt = await depositTx.wait();
+    const { witness: withdrawWitness } = await withdrawNoir.execute({
+      root: "0x" + bobRoot.toString(16),
+      input_notes: [
+        {
+          asset_id: "0x" + BigInt(bobInputNote.asset_id).toString(16),
+          asset_amount: "0x" + BigInt(bobInputNote.asset_amount).toString(16),
+          owner: "0x" + BigInt(bobInputNote.owner).toString(16),
+          owner_secret: "0x" + BigInt(bobInputNote.owner_secret).toString(16),
+          secret: "0x" + BigInt(bobInputNote.secret).toString(16),
+          leaf_index: "0x02",
+          path: bobInputNote.path.map(
+            (item) => "0x" + BigInt(item).toString(16),
+          ),
+          path_indices: bobInputNote.path_indices.map(
+            (item) => "0x" + BigInt(item).toString(16),
+          ),
+        },
+        emptyInputNote,
+        emptyInputNote,
+      ],
+      nullifiers: [
+        "0x" + BigInt(bob_input_nullifer.toString()).toString(16),
+        "0",
+        "0",
+      ],
+      exit_assets: [assetId, "0", "0"],
+      exit_amounts: [
+        "0x" + BigInt(bobInputNote.asset_amount).toString(16),
+        "0",
+        "0",
+      ],
+      exit_addresses: [Signers[9].address, "0", "0"],
+      exit_address_hashes: [
+        (await poseidonHash([BigInt(Signers[9].address)])).toString(),
+        "0",
+        "0",
+      ],
+    });
 
-    // Find the LeafInserted event
-    // const leafInsertedEvent = receipt.events?.find(
-    //   (event: any) => event.event === "LeafInserted",
-    // );
+    const withdrawProof = await withdrawBackend.generateProof(withdrawWitness, {
+      keccak: true,
+    });
 
-    // if (leafInsertedEvent) {
-    //   console.log("LeafInserted event:");
-    //   console.log("  leafIndex:", leafInsertedEvent.args.leafIndex.toString());
-    //   console.log("  leafValue:", leafInsertedEvent.args.leafValue.toString());
-    // } else {
-    //   console.log("LeafInserted event not found");
-    // }
+    const usdcBalanceBefore = await usdcDeployment.balanceOf(
+      Signers[9].address,
+    );
+
+    const usdcBalanceAfter = await usdcDeployment.balanceOf(Signers[9].address);
+
+    expect(usdcBalanceAfter).to.be.gt(usdcBalanceBefore);
   });
 });

@@ -13,6 +13,11 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 uint256 constant NOTES_INPUT_LENGTH = 3;
 
+uint256 constant EXIT_ASSET_INDEX = 1;
+uint256 constant EXIT_AMOUNT_INDEX = 2;
+uint256 constant EXIT_ADDRESSES_INDEX = 3;
+uint256 constant EXIT_ADDRESS_HASHES_INDEX = 4;
+
 contract PrivateStargateFinance is PrivateStargateOApp {
     DepositVerifier public depositVerifier;
     TransferVerifier public transferVerifier;
@@ -100,6 +105,60 @@ contract PrivateStargateFinance is PrivateStargateOApp {
         ) {
             if (_publicInputs[i] != bytes32(0)) {
                 _insert(uint256(_publicInputs[i]));
+            }
+        }
+    }
+
+    function withdraw(
+        bytes calldata _proof,
+        bytes32[] calldata _publicInputs
+    ) public {
+        // Verify the withdrawal proof
+        bool isValidProof = withdrawVerifier.verify(_proof, _publicInputs);
+        require(isValidProof, "Invalid withdraw proof");
+
+        // Mark nullifiers as spent
+        for (uint256 i = 0; i < NOTES_INPUT_LENGTH - 1; i++) {
+            if (_publicInputs[i] != bytes32(0)) {
+                // check not spent
+                require(
+                    nullifierUsed[_publicInputs[i]] == false,
+                    "Nullifier already spent"
+                );
+                // mark as spent
+                nullifierUsed[_publicInputs[i]] = true;
+
+                emit NullifierUsed(uint256(_publicInputs[i]));
+            }
+        }
+
+        // Process withdrawals
+        for (uint256 i = 0; i < NOTES_INPUT_LENGTH - 1; i++) {
+            uint256 assetIndex = EXIT_ASSET_INDEX * NOTES_INPUT_LENGTH + i;
+            uint256 amountIndex = EXIT_AMOUNT_INDEX * NOTES_INPUT_LENGTH + i;
+            uint256 addressIndex = EXIT_ADDRESSES_INDEX *
+                NOTES_INPUT_LENGTH +
+                i;
+
+            address exitAsset = address(
+                uint160(uint256(_publicInputs[assetIndex]))
+            );
+            uint256 exitAmount = uint256(_publicInputs[amountIndex]);
+            address exitAddress = address(
+                uint160(uint256(_publicInputs[addressIndex]))
+            );
+
+            if (exitAmount > 0) {
+                // Get token decimals and calculate actual amount to transfer
+                uint8 decimals = ERC20(exitAsset).decimals();
+                uint256 actualAmount = exitAmount * 10 ** decimals;
+
+                // Transfer tokens to the exit address
+                bool success = ERC20(exitAsset).transfer(
+                    exitAddress,
+                    actualAmount
+                );
+                require(success, "Token transfer failed");
             }
         }
     }

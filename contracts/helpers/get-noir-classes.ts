@@ -16,7 +16,7 @@ export const getNoirClasses = async () => {
 
   // @ts-expect-error no idea
   const withdrawNoir = new Noir(withdrawCircuit);
-  const withdrawBackend = new UltraHonkBackend(transferCircuit.bytecode);
+  const withdrawBackend = new UltraHonkBackend(withdrawCircuit.bytecode);
 
   return {
     depositNoir,
