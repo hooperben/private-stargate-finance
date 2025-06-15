@@ -10,5 +10,7 @@ contract LZOFT is OFT {
         string memory _symbol,
         address _lzEndpoint,
         address _delegate
-    ) OFT(_name, _symbol, _lzEndpoint, _delegate) Ownable(_delegate) {}
+    ) OFT(_name, _symbol, _lzEndpoint, _delegate) Ownable(_delegate) {
+        _mint(msg.sender, 1000 * 10 ** 18);
+    }
 }

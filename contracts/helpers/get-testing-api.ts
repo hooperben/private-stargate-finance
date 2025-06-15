@@ -84,6 +84,8 @@ export const getTestingAPI = async () => {
     getNullifier,
     getOutputHash,
     usdcDeployment,
+    lzOFTDeploymentBase,
+    lzOFTDeploymentRemote,
     depositNoir,
     depositBackend,
     transferNoir,

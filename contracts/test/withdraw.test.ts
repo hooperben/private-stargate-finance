@@ -78,7 +78,7 @@ describe("Testing Withdraw functionality", () => {
     return noteHash;
   };
 
-  it.only("testing withdraw functionality", async () => {
+  it("testing withdraw functionality", async () => {
     const assetId = usdcDeployment.address;
     const amount = BigInt("5");
     const secret =
@@ -283,8 +283,13 @@ describe("Testing Withdraw functionality", () => {
       Signers[9].address,
     );
 
+    await privateStargateFinance.withdraw(
+      withdrawProof.proof,
+      withdrawProof.publicInputs,
+    );
+
     const usdcBalanceAfter = await usdcDeployment.balanceOf(Signers[9].address);
 
-    expect(usdcBalanceAfter).to.be.gt(usdcBalanceBefore);
+    expect(usdcBalanceAfter > usdcBalanceBefore).to.be.true;
   });
 });

@@ -50,6 +50,29 @@ export const deployMockTokens = async () => {
     Deployer.address,
   );
 
+  // Setting destination endpoints in the LZEndpoint mock for each MyOApp instance
+  // (this is not needed in prod)
+  await baseEndpoint.setDestLzEndpoint(
+    lzOFTDeploymentRemote.address,
+    remoteEndpoint.address,
+  );
+  await remoteEndpoint.setDestLzEndpoint(
+    lzOFTDeploymentBase.address,
+    baseEndpoint.address,
+  );
+
+  // wire up
+
+  // Setting each MyOApp instance as a peer of the other
+  await lzOFTDeploymentBase.setPeer(
+    REMOTE_EID,
+    ethers.utils.zeroPad(lzOFTDeploymentRemote.address, 32),
+  );
+  await lzOFTDeploymentRemote.setPeer(
+    BASE_EID,
+    ethers.utils.zeroPad(lzOFTDeploymentBase.address, 32),
+  );
+
   return {
     usdcDeployment,
     lzOFTDeploymentBase,
