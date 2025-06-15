@@ -97,7 +97,7 @@ fn main(
             );
             assert(reconstructed_merkle_root == root);
 
-            let current_asset_amount = inputs_map.get(0).unwrap_or(0);
+            let current_asset_amount = inputs_map.get(input_notes[i].asset_id).unwrap_or(0);
             inputs_map.insert(
                 input_notes[i].asset_id,
                 current_asset_amount + input_notes[i].asset_amount,
@@ -113,7 +113,7 @@ fn main(
             );
             assert(output_leaf_note == output_hashes[i]);
 
-            let current_asset_amount = outputs_map.get(0).unwrap_or(0);
+            let current_asset_amount = outputs_map.get(output_notes[i].asset_id).unwrap_or(0);
             outputs_map.insert(
                 output_notes[i].asset_id,
                 current_asset_amount + output_notes[i].asset_amount,
@@ -122,14 +122,14 @@ fn main(
     }
 
     // check input and output asset keys are equal
-    // assert(inputs_map.len() == outputs_map.len());
+    assert(inputs_map.len() == outputs_map.len());
 
-    // for i in 0..NOTE_COUNT - 1 {
-    //     assert(
-    //         inputs_map.get(input_notes[i].asset_id).unwrap_or(0)
-    //             == outputs_map.get(input_notes[i].asset_id).unwrap_or(0),
-    //     );
-    // }
+    for i in 0..NOTE_COUNT - 1 {
+        assert(
+            inputs_map.get(input_notes[i].asset_id).unwrap_or(0)
+                == outputs_map.get(input_notes[i].asset_id).unwrap_or(0),
+        );
+    }
 }
 
 #[test]
@@ -166,8 +166,6 @@ fn test_main() {
     let path_indices = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
 
     let recon_merkle_root = compute_merkle_root(leaf, path, path_indices);
-    println(recon_merkle_root);
-    println(root);
 
     let input_note: InputNote = InputNote {
         asset_id,
@@ -215,7 +213,4 @@ fn test_main() {
     let output_hashes = [alice_output_hash, bob_output_hash, 0];
 
     main(root, input_notes, output_notes, nullifiers, output_hashes);
-
-    // Uncomment to make test fail
-    // main(1, 1);
 }
