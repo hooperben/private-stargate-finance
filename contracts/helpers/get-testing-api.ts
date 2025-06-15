@@ -59,6 +59,7 @@ export const getTestingAPI = async () => {
     verifiers.deposit,
     verifiers.transfer,
     verifiers.withdraw,
+    verifiers.warp,
   );
 
   const remotePSF = await deployPSF(
@@ -67,6 +68,7 @@ export const getTestingAPI = async () => {
     verifiers.deposit,
     verifiers.transfer,
     verifiers.withdraw,
+    verifiers.warp,
   );
 
   // wire up PSFs

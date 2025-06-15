@@ -20,9 +20,16 @@ export const deployVerifiers = async () => {
   );
   const withdrawDeployment = await WithdrawVerifierFactory.deploy();
 
+  const WarpVerifierFactory = await ethers.getContractFactory(
+    "WarpVerifier",
+    Deployer,
+  );
+  const warpVerifierDeployment = await WarpVerifierFactory.deploy();
+
   return {
     deposit: depositDeployment.address,
     transfer: transferDeployment.address,
     withdraw: withdrawDeployment.address,
+    warp: warpVerifierDeployment.address,
   };
 };

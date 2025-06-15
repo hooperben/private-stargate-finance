@@ -6,6 +6,7 @@ import "./PrivateStargateOApp.sol";
 import {DepositVerifier} from "./verifiers/DepositVerifier.sol";
 import {TransferVerifier} from "./verifiers/TransferVerifier.sol";
 import {WithdrawVerifier} from "./verifiers/WithdrawVerifier.sol";
+import {WarpVerifier} from "./verifiers/WarpVerifier.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -22,6 +23,7 @@ contract PrivateStargateFinance is PrivateStargateOApp {
     DepositVerifier public depositVerifier;
     TransferVerifier public transferVerifier;
     WithdrawVerifier public withdrawVerifier;
+    WarpVerifier public warpVerifier;
 
     mapping(bytes32 => bool) public nullifierUsed;
 
@@ -30,11 +32,13 @@ contract PrivateStargateFinance is PrivateStargateOApp {
         address _owner,
         address _depositVerifier,
         address _transferVerifier,
-        address _withdrawVerifier
+        address _withdrawVerifier,
+        address _warpVerifier
     ) Ownable(_owner) PrivateStargateOApp(_endpoint, _owner) {
         depositVerifier = DepositVerifier(_depositVerifier);
         transferVerifier = TransferVerifier(_transferVerifier);
         withdrawVerifier = WithdrawVerifier(_withdrawVerifier);
+        warpVerifier = WarpVerifier(_warpVerifier);
     }
 
     function deposit(

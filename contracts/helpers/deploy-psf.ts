@@ -6,6 +6,7 @@ export const deployPSF = async (
   depositVerifier: string,
   transferVerifier: string,
   withdrawVerifer: string,
+  warpVerifier: string,
 ) => {
   const [Deployer] = await ethers.getSigners();
 
@@ -20,6 +21,7 @@ export const deployPSF = async (
     depositVerifier,
     transferVerifier,
     withdrawVerifer,
+    warpVerifier,
   );
 
   const privateStargateFinanceDeployment =
