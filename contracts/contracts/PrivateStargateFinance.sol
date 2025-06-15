@@ -11,6 +11,7 @@ import {WarpVerifier} from "./verifiers/WarpVerifier.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
 uint256 constant NOTES_INPUT_LENGTH = 3;
 
@@ -23,11 +24,13 @@ uint256 constant EXIT_ASSET_START_INDEX = 4;
 uint256 constant EXIT_AMOUNT_START_INDEX = 7;
 uint256 constant EXIT_ADDRESSES_START_INDEX = 10;
 
-contract PrivateStargateFinance is PrivateStargateOApp {
+contract PrivateStargateFinance is PrivateStargateOApp, AccessControl {
     DepositVerifier public depositVerifier;
     TransferVerifier public transferVerifier;
     WithdrawVerifier public withdrawVerifier;
     WarpVerifier public warpVerifier;
+
+    bytes32 public DEPOSIT_ROLE = keccak256("DEPOSIT_ROLE");
 
     mapping(bytes32 => bool) public nullifierUsed;
 
@@ -43,6 +46,9 @@ contract PrivateStargateFinance is PrivateStargateOApp {
         transferVerifier = TransferVerifier(_transferVerifier);
         withdrawVerifier = WithdrawVerifier(_withdrawVerifier);
         warpVerifier = WarpVerifier(_warpVerifier);
+
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(DEPOSIT_ROLE, msg.sender);
     }
 
     function deposit(
@@ -51,7 +57,7 @@ contract PrivateStargateFinance is PrivateStargateOApp {
         bytes calldata _proof,
         bytes32[] calldata _publicInputs,
         bytes calldata _payload // TODO make this real
-    ) public {
+    ) public onlyRole(DEPOSIT_ROLE) {
         uint8 decimals = ERC20(_erc20).decimals();
         bool depositTransfer = ERC20(_erc20).transferFrom(
             msg.sender,
