@@ -3,8 +3,6 @@ pragma solidity ^0.8.24;
 
 import "./utils/Poseidon2.sol";
 
-import "hardhat/console.sol";
-
 contract PoseidonMerkleTree {
     using Field for *;
 
@@ -104,6 +102,14 @@ contract PoseidonMerkleTree {
 
     event LeafInserted(uint256 indexed leafIndex, uint256 indexed leafValue);
 
+    // Add a helper function to generate consistent keys
+    function getStorageKey(
+        uint256 level,
+        uint256 index
+    ) internal pure returns (uint256) {
+        return (level << 32) | index; // Combine level and index into a single key
+    }
+
     function _insert(uint256 _leaf) internal returns (uint256 index) {
         uint256 insertIndex = nextIndex;
         require(insertIndex != MAX_LEAF_INDEX, "Tree Full");
@@ -111,14 +117,16 @@ contract PoseidonMerkleTree {
         uint256 currentIndex = insertIndex;
         uint256 currentHash = _leaf;
 
-        filledSubtrees[currentIndex] = currentHash;
+        // Store leaf at level 0
+        filledSubtrees[getStorageKey(0, currentIndex)] = currentHash;
 
         for (uint256 i = 0; i < height - 1; i++) {
             bool isLeft = currentIndex % 2 == 0;
             uint256 siblingIndex = isLeft ? currentIndex + 1 : currentIndex - 1;
 
-            // Get sibling value (either stored or default zero)
-            uint256 sibling = filledSubtrees[siblingIndex];
+            // Get sibling value using consistent key generation
+            uint256 siblingKey = getStorageKey(i, siblingIndex);
+            uint256 sibling = filledSubtrees[siblingKey];
             if (sibling == 0) {
                 sibling = zeros(i);
             }
@@ -133,9 +141,8 @@ contract PoseidonMerkleTree {
             // Move up to parent level
             currentIndex = currentIndex / 2;
 
-            // Store the computed hash for this level and index
-            uint256 parentKey = (1 << (height - 1 - i)) + currentIndex;
-            filledSubtrees[parentKey] = currentHash;
+            // Store the computed hash for the next level using consistent key
+            filledSubtrees[getStorageKey(i + 1, currentIndex)] = currentHash;
         }
 
         uint32 newRootIndex = (currentRootIndex + 1) % ROOT_HISTORY_SIZE;

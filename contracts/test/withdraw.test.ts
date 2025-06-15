@@ -211,8 +211,8 @@ describe("Testing Withdraw functionality", () => {
       .connect(Signers[10])
       .transfer(transferProof.proof, transferProof.publicInputs);
 
-    await tree.insert(alice_output_hash.toString(), 1);
-    await tree.insert(bob_output_hash.toString(), 2);
+    await tree.insert(transferProof.publicInputs[4], 1);
+    await tree.insert(transferProof.publicInputs[5], 2);
 
     const bobRoot = (await tree.getRoot()).toBigInt();
     const bobProof = await tree.getProof(2);

@@ -12,8 +12,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import "hardhat/console.sol";
-
 uint256 constant NOTES_INPUT_LENGTH = 3;
 
 uint256 constant EXIT_ASSET_INDEX = 1;
@@ -116,8 +114,6 @@ contract PrivateStargateFinance is PrivateStargateOApp {
             i++
         ) {
             if (_publicInputs[i] != bytes32(0)) {
-                console.log("inserting ncs: ");
-                console.logBytes32(_publicInputs[i]);
                 _insert(uint256(_publicInputs[i]));
             }
         }
