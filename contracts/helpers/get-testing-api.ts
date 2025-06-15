@@ -1,15 +1,10 @@
-import { ethers } from "hardhat";
 import { Signer } from "ethers";
-
-import { UltraHonkBackend } from "@aztec/bb.js";
-import { Noir } from "@noir-lang/noir_js";
-import depositCircuit from "../../circuits/deposit/target/deposit.json";
-import transferCircuit from "../../circuits/transfer/target/transfer.json";
-
-import { getMerkleTree } from "./merkle";
-import { deployVerifiers } from "./deploy-verifiers";
+import { ethers } from "hardhat";
 import { deployMockTokens } from "./deploy-mock-tokens";
 import { deployPSF } from "./deploy-psf";
+import { deployVerifiers } from "./deploy-verifiers";
+import { getNoirClasses } from "./get-noir-classes";
+import { getMerkleTree } from "./merkle";
 
 export const getTestingAPI = async () => {
   const Signers = await ethers.getSigners();
@@ -21,6 +16,34 @@ export const getTestingAPI = async () => {
 
   const poseidonTestFactory = await ethers.getContractFactory("PoseidonTest");
   const poseidonTest = await poseidonTestFactory.deploy();
+
+  const getNullifier = async (
+    leafIndex: bigint,
+    owner: bigint,
+    secret: bigint,
+    assetId: bigint,
+    amount: bigint,
+  ) => {
+    const nullifier = await poseidonHash([
+      leafIndex,
+      owner,
+      secret,
+      assetId,
+      amount,
+    ]);
+
+    return nullifier;
+  };
+
+  const getOutputHash = async (
+    owner: bigint,
+    secret: bigint,
+    assetId: bigint,
+    amount: bigint,
+  ) => {
+    const noteHash = await poseidonHash([assetId, amount, owner, secret]);
+    return noteHash;
+  };
 
   const {
     usdcDeployment,
@@ -46,23 +69,27 @@ export const getTestingAPI = async () => {
     verifiers.withdraw,
   );
 
-  // DEPOSIT CIRCUIT
-  // @ts-expect-error idk
-  const circuitNoir = new Noir(depositCircuit);
-  const circuitBackend = new UltraHonkBackend(depositCircuit.bytecode);
-
-  // @ts-expect-error no idea
-  const transferNoir = new Noir(transferCircuit);
-  const transferBackend = new UltraHonkBackend(transferCircuit.bytecode);
+  const {
+    depositNoir,
+    depositBackend,
+    transferNoir,
+    transferBackend,
+    withdrawNoir,
+    withdrawBackend,
+  } = await getNoirClasses();
 
   const tree = await getMerkleTree();
 
   return {
+    getNullifier,
+    getOutputHash,
     usdcDeployment,
-    circuitNoir,
-    circuitBackend,
+    depositNoir,
+    depositBackend,
     transferNoir,
     transferBackend,
+    withdrawNoir,
+    withdrawBackend,
     Signers,
     poseidonTest,
     poseidonHash,

@@ -15,7 +15,7 @@ import {
 } from "../helpers/formatting";
 import { parseUnits } from "ethers/lib/utils";
 
-describe("Testing Transfer functionality", () => {
+describe("Testing Withdraw functionality", () => {
   let Signers: SignerWithAddress[];
   let poseidonHash: (inputs: bigint[]) => Promise<{ toString(): string }>;
 
@@ -29,6 +29,21 @@ describe("Testing Transfer functionality", () => {
   let tree: PoseidonMerkleTree;
 
   let usdcDeployment: Contract;
+
+  beforeEach(async () => {
+    Signers = await ethers.getSigners();
+    ({
+      usdcDeployment,
+      poseidonHash,
+      depositNoir,
+      depositBackend,
+      transferNoir,
+      transferBackend,
+      privateStargateFinance,
+      tree,
+    } = await getTestingAPI());
+  });
+
   const getNullifier = async (
     leafIndex: bigint,
     owner: bigint,
@@ -57,21 +72,7 @@ describe("Testing Transfer functionality", () => {
     return noteHash;
   };
 
-  beforeEach(async () => {
-    Signers = await ethers.getSigners();
-    ({
-      usdcDeployment,
-      poseidonHash,
-      depositNoir,
-      depositBackend,
-      transferNoir,
-      transferBackend,
-      privateStargateFinance,
-      tree,
-    } = await getTestingAPI());
-  });
-
-  it("testing transfer functionality", async () => {
+  it("testing withdraw functionality", async () => {
     const assetId = usdcDeployment.address;
     const amount = BigInt("5");
     const secret =

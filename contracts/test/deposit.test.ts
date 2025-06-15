@@ -1,39 +1,35 @@
 import { Noir } from "@noir-lang/noir_js";
-import { getRandomWithField } from "../helpers";
 import { getTestingAPI } from "../helpers/get-testing-api";
 
 import { UltraHonkBackend } from "@aztec/bb.js";
 import { Contract } from "ethers";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { PoseidonMerkleTree } from "../helpers/PoseidonMerkleTree";
+import { parseUnits } from "ethers/lib/utils";
 
 describe("Testing deposit functionality", () => {
   let Signers: SignerWithAddress[];
-  let poseidonTest: Contract;
   let poseidonHash: (inputs: bigint[]) => Promise<{ toString(): string }>;
 
-  let circuitNoir: Noir;
-  let circuitBackend: UltraHonkBackend;
+  let depositNoir: Noir;
+  let depositBackend: UltraHonkBackend;
 
   let privateStargateFinance: Contract;
-  let tree: PoseidonMerkleTree;
+  let usdcDeployment: Contract;
 
   beforeEach(async () => {
     Signers = await ethers.getSigners();
     ({
-      poseidonTest,
+      usdcDeployment,
       poseidonHash,
-      // Signers,
-      circuitNoir,
-      circuitBackend,
+      depositNoir,
+      depositBackend,
       privateStargateFinance,
-      tree,
     } = await getTestingAPI());
   });
 
   it("testing note proving in typescript", async () => {
-    const assetId = "0xc026395860Db2d07ee33e05fE50ed7bD583189C7";
+    const assetId = usdcDeployment.address;
     const amount = BigInt("5");
 
     const secret =
@@ -45,7 +41,7 @@ describe("Testing deposit functionality", () => {
 
     const note = await poseidonHash([assetIdBigInt, amount, owner, secret]);
 
-    const { witness } = await circuitNoir.execute({
+    const { witness } = await depositNoir.execute({
       hash: BigInt(note.toString()).toString(),
       asset_id: assetIdBigInt.toString(),
       asset_amount: amount.toString(),
@@ -53,54 +49,21 @@ describe("Testing deposit functionality", () => {
       secret: secret.toString(),
     });
 
-    const proof = await circuitBackend.generateProof(witness);
+    const proof = await depositBackend.generateProof(witness, { keccak: true });
 
-    const depositTx = await privateStargateFinance.deposit(
+    // approve PSF to move USDC tokens
+    const parseAmount = parseUnits("5", 6);
+    const approveTx = await usdcDeployment
+      .connect(Signers[0])
+      .approve(privateStargateFinance.address, parseAmount);
+    await approveTx.wait();
+
+    await privateStargateFinance.deposit(
       assetId,
       amount,
       proof.proof,
       proof.publicInputs,
       "0x",
     );
-
-    // Wait for the transaction to be mined and get the receipt
-    // const receipt = await depositTx.wait();
-
-    // Find the LeafInserted event
-    // const leafInsertedEvent = receipt.events?.find(
-    //   (event: any) => event.event === "LeafInserted",
-    // );
-
-    // if (leafInsertedEvent) {
-    //   console.log("LeafInserted event:");
-    //   console.log("  leafIndex:", leafInsertedEvent.args.leafIndex.toString());
-    //   console.log("  leafValue:", leafInsertedEvent.args.leafValue.toString());
-    // } else {
-    //   console.log("LeafInserted event not found");
-    // }
-
-    console.log(proof.publicInputs[0]);
-    await tree.insert(proof.publicInputs[0], 0);
-
-    const merkleProof = await tree.getProof(0);
-    console.log(merkleProof.siblings.map((item) => item.toBigInt()));
-    console.log(merkleProof.indices);
-    const leaf = await tree.getLeafValue(0);
-    console.log("leaf: ", leaf.toBigInt());
-
-    // console.log(merkleProof);
-
-    const formmated = merkleProof.siblings.map((item) => item.toBigInt());
-
-    // console.log(formmated);
-
-    const newRoot = await tree.getRoot();
-
-    console.log("New Root: ", newRoot);
-    console.log("New Root: ", BigInt(newRoot.toString()));
-
-    // if we update our in memory tree to match the contract our roots should match
-
-    // console.log(depositTx);
   });
 });
