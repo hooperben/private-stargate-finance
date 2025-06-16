@@ -4,7 +4,7 @@ import { parseUnits } from "ethers";
 import { approve } from "../helpers/functions/approve";
 import { getDepositDetails } from "../helpers/functions/deposit";
 import { getTestingAPI } from "../helpers/get-testing-api";
-import { PoseidonMerkleTree } from "../helpers/PoseidonMerkleTree";
+import { PoseidonMerkleTree } from "../helpers/poseidon-merkle-tree";
 import { PrivateStargateFinance, USDC } from "../typechain-types";
 
 describe("Testing deposit functionality", () => {

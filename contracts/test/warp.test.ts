@@ -15,7 +15,7 @@ import { getNullifier } from "../helpers/functions/get-nullifier";
 import { getTransferDetails, transfer } from "../helpers/functions/transfer";
 import { getWarpDetails } from "../helpers/functions/warp";
 import { getTestingAPI } from "../helpers/get-testing-api";
-import { PoseidonMerkleTree } from "../helpers/PoseidonMerkleTree";
+import { PoseidonMerkleTree } from "../helpers/poseidon-merkle-tree";
 import { REMOTE_EID } from "../helpers/test-suite/deploy-mock-tokens";
 import { LZOFT, PrivateStargateFinance, USDC } from "../typechain-types";
 
@@ -30,7 +30,7 @@ describe("Testing Warp functionality", () => {
   let lzOFTDeploymentBase: LZOFT;
   let lzOFTDeploymentRemote: LZOFT;
 
-  beforeEach(async () => {
+  before(async () => {
     ({
       Signers,
       lzOFTDeploymentBase,
@@ -201,7 +201,7 @@ describe("Testing Warp functionality", () => {
     const lzOFTDeploymentRemoteBalanceBefore =
       await lzOFTDeploymentRemote.balanceOf(await remotePSF.getAddress());
 
-    const warpTx = await privateStargateFinance.warp(
+    await privateStargateFinance.warp(
       REMOTE_EID,
       warpProof.proof,
       warpProof.publicInputs,

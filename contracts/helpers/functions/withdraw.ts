@@ -1,5 +1,5 @@
 import { InputNote } from "..";
-import { PoseidonMerkleTree } from "../PoseidonMerkleTree";
+import { PoseidonMerkleTree } from "../poseidon-merkle-tree";
 import { getNoirClasses } from "../test-suite/get-noir-classes";
 
 export const getWithdrawDetails = async (

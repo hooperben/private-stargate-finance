@@ -2,7 +2,7 @@ import { ProofData } from "@aztec/bb.js";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { InputNote, OutputNote } from "..";
 import { PrivateStargateFinance } from "../../typechain-types";
-import { PoseidonMerkleTree } from "../PoseidonMerkleTree";
+import { PoseidonMerkleTree } from "../poseidon-merkle-tree";
 import { getNoirClasses } from "../test-suite/get-noir-classes";
 
 export const getTransferDetails = async (

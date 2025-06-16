@@ -1,7 +1,7 @@
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { parseUnits } from "ethers";
 import { ethers } from "hardhat";
-import { PoseidonMerkleTree } from "../helpers/PoseidonMerkleTree";
+import { PoseidonMerkleTree } from "../helpers/poseidon-merkle-tree";
 import {
   createInputNote,
   createOutputNote,

@@ -1,7 +1,7 @@
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
 import { parseUnits } from "ethers";
-import { PoseidonMerkleTree } from "../helpers/PoseidonMerkleTree";
+import { PoseidonMerkleTree } from "../helpers/poseidon-merkle-tree";
 import {
   createInputNote,
   createOutputNote,
@@ -31,7 +31,7 @@ describe("Testing Withdraw functionality", () => {
       await getTestingAPI());
   });
 
-  it("testing withdraw functionality", async () => {
+  it("setting up withdraw test case", async () => {
     const assetId = await usdcDeployment.getAddress();
     const assetAmount = BigInt("5");
     const secret =
