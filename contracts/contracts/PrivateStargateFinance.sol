@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {IOFT, SendParam, OFTReceipt} from "@layerzerolabs/oft-evm/contracts/interfaces/IOFT.sol";
 
 import {DepositVerifier} from "./verifiers/DepositVerifier.sol";
 import {TransferVerifier} from "./verifiers/TransferVerifier.sol";
@@ -14,13 +13,18 @@ import {WarpVerifier} from "./verifiers/WarpVerifier.sol";
 import {IStargatePool} from "./IStargatePool.sol";
 
 import "./PrivateStargateOApp.sol";
+import "./StargateSenderBase.sol";
 
 uint256 constant NOTES_INPUT_LENGTH = 3;
 uint256 constant EXIT_ASSET_START_INDEX = 4;
 uint256 constant EXIT_AMOUNT_START_INDEX = 7;
 uint256 constant EXIT_ADDRESSES_START_INDEX = 10;
 
-contract PrivateStargateFinance is PrivateStargateOApp, AccessControl {
+contract PrivateStargateFinance is
+    PrivateStargateOApp,
+    StargateSenderBase,
+    AccessControl
+{
     DepositVerifier public depositVerifier;
     TransferVerifier public transferVerifier;
     WithdrawVerifier public withdrawVerifier;
@@ -219,7 +223,10 @@ contract PrivateStargateFinance is PrivateStargateOApp, AccessControl {
             // Refund address in case of failed source message.
             payable(address(this))
         );
-        _sendStargateAssets(_dstEid, _publicInputs, _options);
+
+        // get the address of private stargate finance on the remote chain
+        bytes32 peer = peers[_dstEid];
+        _sendStargateAssets(_dstEid, peer, _publicInputs, _options);
     }
 
     fallback() external payable {}
@@ -247,57 +254,5 @@ contract PrivateStargateFinance is PrivateStargateOApp, AccessControl {
         }
 
         return finalNotes;
-    }
-
-    function _sendStargateAssets(
-        uint32 _dstEid,
-        bytes32[] calldata _publicInputs,
-        bytes calldata _options
-    ) internal {
-        for (uint256 i = 7; i < 10; i++) {
-            address stargateAssetAddress = address(
-                uint160(uint256(_publicInputs[i]))
-            );
-
-            if (stargateAssetAddress != address(0)) {
-                _sendSingleStargateAsset(
-                    _dstEid,
-                    stargateAssetAddress,
-                    uint256(_publicInputs[i + 3]), // amount is at i+3 (indices 10-12)
-                    _options
-                );
-            }
-        }
-    }
-
-    function _sendSingleStargateAsset(
-        uint32 _dstEid,
-        address stargateAssetAddress,
-        uint256 amount,
-        bytes calldata _options
-    ) internal {
-        uint256 adjustedAmount = amount *
-            10 ** ERC20(stargateAssetAddress).decimals();
-
-        SendParam memory sendParam = SendParam(
-            _dstEid,
-            peers[_dstEid],
-            adjustedAmount,
-            adjustedAmount,
-            _options,
-            "",
-            ""
-        );
-
-        MessagingFee memory fee = IOFT(stargateAssetAddress).quoteSend(
-            sendParam,
-            false
-        );
-
-        IOFT(stargateAssetAddress).send{value: fee.nativeFee}(
-            sendParam,
-            fee,
-            payable(msg.sender)
-        );
     }
 }
