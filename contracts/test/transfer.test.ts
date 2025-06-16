@@ -79,7 +79,7 @@ describe("Testing Transfer functionality", () => {
       merkleProof.indices,
     );
 
-    const aliceInputNullifer = await getNullifier(
+    const aliceInputNullifier = await getNullifier(
       leafIndex,
       owner,
       secret,
@@ -119,7 +119,7 @@ describe("Testing Transfer functionality", () => {
 
     const inputNotes = [aliceInputNote, emptyInputNote, emptyInputNote];
     const outputNotes = [aliceOutputNote, bobOutputNote, emptyOutputNote];
-    const nullifiers = [aliceInputNullifer, 0n, 0n];
+    const nullifiers = [aliceInputNullifier, 0n, 0n];
     const outputHashes = [aliceOutputHash, bobOutputHash, 0n];
 
     const { proof: transferProof } = await getTransferDetails(
