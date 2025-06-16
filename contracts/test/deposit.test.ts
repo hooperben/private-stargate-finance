@@ -1,69 +1,67 @@
-import { Noir } from "@noir-lang/noir_js";
-import { getTestingAPI } from "../helpers/get-testing-api";
-
-import { UltraHonkBackend } from "@aztec/bb.js";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { expect } from "chai";
 import { parseUnits } from "ethers";
 import { approve } from "../helpers/functions/approve";
+import { getDepositDetails } from "../helpers/functions/deposit";
+import { getTestingAPI } from "../helpers/get-testing-api";
 import { PrivateStargateFinance, USDC } from "../typechain-types";
 
 describe("Testing deposit functionality", () => {
   let Signers: HardhatEthersSigner[];
   let poseidonHash: (inputs: bigint[]) => Promise<{ toString(): string }>;
 
-  let depositNoir: Noir;
-  let depositBackend: UltraHonkBackend;
-
   let privateStargateFinance: PrivateStargateFinance;
   let usdcDeployment: USDC;
 
   beforeEach(async () => {
-    ({
-      Signers,
-      usdcDeployment,
-      poseidonHash,
-      depositNoir,
-      depositBackend,
-      privateStargateFinance,
-    } = await getTestingAPI());
+    ({ Signers, usdcDeployment, poseidonHash, privateStargateFinance } =
+      await getTestingAPI());
   });
 
   it("testing note proving in typescript", async () => {
     const assetId = await usdcDeployment.getAddress();
-    const amount = BigInt("5");
+    const assetAmount = BigInt("5");
 
     const secret =
       2389312107716289199307843900794656424062350252250388738019021107824217896920n;
     const owner_secret =
       10036677144260647934022413515521823129584317400947571241312859176539726523915n;
     const owner = BigInt((await poseidonHash([owner_secret])).toString());
-    const assetIdBigInt = BigInt(assetId);
 
-    const note = await poseidonHash([assetIdBigInt, amount, owner, secret]);
-
-    const { witness } = await depositNoir.execute({
-      hash: BigInt(note.toString()).toString(),
-      asset_id: assetIdBigInt.toString(),
-      asset_amount: amount.toString(),
-      owner: owner.toString(),
-      secret: secret.toString(),
+    // create the ZK proof
+    const { proof } = await getDepositDetails({
+      assetId,
+      assetAmount,
+      secret,
+      owner,
     });
 
-    const proof = await depositBackend.generateProof(witness, { keccak: true });
+    const evmAmount = parseUnits("5", 6);
 
+    // approve PSF to move the deposit token
     await approve(
       Signers[0],
       await usdcDeployment.getAddress(),
       await privateStargateFinance.getAddress(),
-      parseUnits("5", 6),
+      evmAmount,
     );
 
+    // check our balances beforehand
+    const usdcBalanceBefore = await usdcDeployment.balanceOf(
+      Signers[0].address,
+    );
+
+    // call the deposit TX
     await privateStargateFinance.deposit(
       assetId,
-      amount,
+      assetAmount,
       proof.proof,
       proof.publicInputs,
       "0x",
     );
+
+    const usdcBalanceAfter = await usdcDeployment.balanceOf(Signers[0].address);
+
+    expect(usdcBalanceAfter).eq(usdcBalanceBefore - evmAmount);
   });
 });
