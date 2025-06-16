@@ -1,29 +1,21 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
-import "./PrivateStargateOApp.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {IOFT, SendParam, OFTReceipt} from "@layerzerolabs/oft-evm/contracts/interfaces/IOFT.sol";
 
 import {DepositVerifier} from "./verifiers/DepositVerifier.sol";
 import {TransferVerifier} from "./verifiers/TransferVerifier.sol";
 import {WithdrawVerifier} from "./verifiers/WithdrawVerifier.sol";
 import {WarpVerifier} from "./verifiers/WarpVerifier.sol";
-
 import {IStargatePool} from "./IStargatePool.sol";
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-
-import {IOFT, SendParam, OFTReceipt} from "@layerzerolabs/oft-evm/contracts/interfaces/IOFT.sol";
+import {PrivateStargateOApp} from "./PrivateStargateOApp.sol";
 
 uint256 constant NOTES_INPUT_LENGTH = 3;
-
-uint256 constant EXIT_ASSET_INDEX = 1;
-uint256 constant EXIT_AMOUNT_INDEX = 2;
-uint256 constant EXIT_ADDRESSES_INDEX = 3;
-uint256 constant EXIT_ADDRESS_HASHES_INDEX = 4;
-
 uint256 constant EXIT_ASSET_START_INDEX = 4;
 uint256 constant EXIT_AMOUNT_START_INDEX = 7;
 uint256 constant EXIT_ADDRESSES_START_INDEX = 10;
@@ -34,7 +26,7 @@ contract PrivateStargateFinance is PrivateStargateOApp, AccessControl {
     WithdrawVerifier public withdrawVerifier;
     WarpVerifier public warpVerifier;
 
-    bytes32 public DEPOSIT_ROLE = keccak256("DEPOSIT_ROLE");
+    bytes32 public DEPOSIT_ROLE = keccak256("DEPOSIT_ROLE"); // :(
 
     mapping(bytes32 => bool) public nullifierUsed;
 
@@ -68,7 +60,6 @@ contract PrivateStargateFinance is PrivateStargateOApp, AccessControl {
             address(this),
             _amount * 10 ** decimals
         );
-
         require(depositTransfer, "failed to transfer deposit");
 
         // VERIFY PROOF
@@ -134,11 +125,11 @@ contract PrivateStargateFinance is PrivateStargateOApp, AccessControl {
         bytes32[] calldata _publicInputs
     ) public {
         require(isKnownRoot(uint256(_publicInputs[0])), "Invalid Root!");
-        // Verify the withdrawal proof
+
         bool isValidProof = withdrawVerifier.verify(_proof, _publicInputs);
         require(isValidProof, "Invalid withdraw proof");
 
-        // Mark nullifiers as spent - FIX: include all 3 nullifiers
+        // Mark nullifiers as spent
         for (uint256 i = 1; i <= NOTES_INPUT_LENGTH; i++) {
             if (_publicInputs[i] != bytes32(0)) {
                 // check not spent
@@ -216,8 +207,6 @@ contract PrivateStargateFinance is PrivateStargateOApp, AccessControl {
 
         // Extract non-zero output hashes for cross-chain payload
         uint256[] memory finalNotes = _extractOutputHashes(_publicInputs);
-
-        // // Send the stargate assets
 
         // send the note hashes to insert through LZ
         bytes memory _payload = abi.encode(finalNotes);
@@ -310,7 +299,5 @@ contract PrivateStargateFinance is PrivateStargateOApp, AccessControl {
             fee,
             payable(msg.sender)
         );
-
-        // TODO EVENTS AND NOTE SHARING
     }
 }
