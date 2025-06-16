@@ -13,11 +13,13 @@ import {
   createOutputNote,
   emptyOutputNote,
 } from "../helpers/formatting";
-import { parseUnits } from "ethers/lib/utils";
+import { parseUnits } from "ethers";
 import { expect } from "chai";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { PrivateStargateFinance, USDC } from "../typechain-types";
 
 describe("Testing Withdraw functionality", () => {
-  let Signers: SignerWithAddress[];
+  let Signers: HardhatEthersSigner[];
   let poseidonHash: (inputs: bigint[]) => Promise<{ toString(): string }>;
 
   let depositNoir: Noir;
@@ -29,14 +31,14 @@ describe("Testing Withdraw functionality", () => {
   let withdrawNoir: Noir;
   let withdrawBackend: UltraHonkBackend;
 
-  let privateStargateFinance: Contract;
+  let privateStargateFinance: PrivateStargateFinance;
   let tree: PoseidonMerkleTree;
 
-  let usdcDeployment: Contract;
+  let usdcDeployment: USDC;
 
   beforeEach(async () => {
-    Signers = await ethers.getSigners();
     ({
+      Signers,
       usdcDeployment,
       poseidonHash,
       depositNoir,
@@ -79,7 +81,7 @@ describe("Testing Withdraw functionality", () => {
   };
 
   it("testing withdraw functionality", async () => {
-    const assetId = usdcDeployment.address;
+    const assetId = await usdcDeployment.getAddress();
     const amount = BigInt("5");
     const secret =
       2389312107716289199307843900794656424062350252250388738019021107824217896920n;
@@ -106,7 +108,7 @@ describe("Testing Withdraw functionality", () => {
     const parseAmount = parseUnits("5", 6);
     const approveTx = await usdcDeployment
       .connect(Signers[0])
-      .approve(privateStargateFinance.address, parseAmount);
+      .approve(await privateStargateFinance.getAddress(), parseAmount);
     await approveTx.wait();
 
     // deposit the tokens into the pool

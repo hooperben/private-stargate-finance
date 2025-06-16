@@ -27,9 +27,9 @@ export const deployVerifiers = async () => {
   const warpVerifierDeployment = await WarpVerifierFactory.deploy();
 
   return {
-    deposit: depositDeployment.address,
-    transfer: transferDeployment.address,
-    withdraw: withdrawDeployment.address,
-    warp: warpVerifierDeployment.address,
+    deposit: await depositDeployment.getAddress(),
+    transfer: await transferDeployment.getAddress(),
+    withdraw: await withdrawDeployment.getAddress(),
+    warp: await warpVerifierDeployment.getAddress(),
   };
 };

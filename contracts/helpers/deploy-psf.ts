@@ -1,4 +1,6 @@
 import { ethers } from "hardhat";
+import { Contract } from "ethers";
+import { PrivateStargateFinance__factory } from "../typechain-types";
 
 export const deployPSF = async (
   lzEndpoint: string,
@@ -25,11 +27,11 @@ export const deployPSF = async (
   );
 
   const privateStargateFinanceDeployment =
-    await privateStargateFinance.deployed();
+    await privateStargateFinance.waitForDeployment();
 
-  const privateStargateContract = new ethers.Contract(
-    privateStargateFinanceDeployment.address,
-    PrivateStargateFinanceFactory.interface,
+  const privateStargateContract = new Contract(
+    await privateStargateFinanceDeployment.getAddress(),
+    PrivateStargateFinance__factory.abi,
     Deployer,
   );
 

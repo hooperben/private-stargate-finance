@@ -1,9 +1,7 @@
 import { Noir } from "@noir-lang/noir_js";
-import { getRandomWithField } from "../helpers";
 import { getTestingAPI } from "../helpers/get-testing-api";
 
 import { UltraHonkBackend } from "@aztec/bb.js";
-import { Contract } from "ethers";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { PoseidonMerkleTree } from "../helpers/PoseidonMerkleTree";
@@ -13,12 +11,14 @@ import {
   createOutputNote,
   emptyOutputNote,
 } from "../helpers/formatting";
-import { parseEther, parseUnits } from "ethers/lib/utils";
+import { parseEther, parseUnits, zeroPadValue } from "ethers";
 import { REMOTE_EID } from "../helpers/deploy-mock-tokens";
 import { Options } from "@layerzerolabs/lz-v2-utilities";
+import { LZOFT, PrivateStargateFinance, USDC } from "../typechain-types";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("Testing Warp functionality", () => {
-  let Signers: SignerWithAddress[];
+  let Signers: HardhatEthersSigner[];
   let poseidonHash: (inputs: bigint[]) => Promise<{ toString(): string }>;
 
   let depositNoir: Noir;
@@ -30,12 +30,12 @@ describe("Testing Warp functionality", () => {
   let warpNoir: Noir;
   let warpBackend: UltraHonkBackend;
 
-  let privateStargateFinance: Contract;
+  let privateStargateFinance: PrivateStargateFinance;
   let tree: PoseidonMerkleTree;
 
-  let usdcDeployment: Contract;
-  let lzOFTDeploymentBase: Contract;
-  let lzOFTDeploymentRemote: Contract;
+  let usdcDeployment: USDC;
+  let lzOFTDeploymentBase: LZOFT;
+  let lzOFTDeploymentRemote: LZOFT;
 
   const getNullifier = async (
     leafIndex: bigint,
@@ -66,8 +66,8 @@ describe("Testing Warp functionality", () => {
   };
 
   beforeEach(async () => {
-    Signers = await ethers.getSigners();
     ({
+      Signers,
       usdcDeployment,
       lzOFTDeploymentBase,
       lzOFTDeploymentRemote,
@@ -83,8 +83,8 @@ describe("Testing Warp functionality", () => {
     } = await getTestingAPI());
   });
 
-  it.only("testing warp functionality", async () => {
-    const assetId = lzOFTDeploymentBase.address;
+  it("testing warp functionality", async () => {
+    const assetId = await lzOFTDeploymentBase.getAddress();
     const amount = BigInt("5");
     const secret =
       2389312107716289199307843900794656424062350252250388738019021107824217896920n;
@@ -111,7 +111,7 @@ describe("Testing Warp functionality", () => {
     const parseAmount = parseUnits("5", 18);
     const approveTx = await lzOFTDeploymentBase
       .connect(Signers[0])
-      .approve(privateStargateFinance.address, parseAmount);
+      .approve(await privateStargateFinance.getAddress(), parseAmount);
     await approveTx.wait();
 
     // deposit the tokens into the pool
@@ -324,7 +324,7 @@ describe("Testing Warp functionality", () => {
 
     const oftSendParam = [
       REMOTE_EID, // REMOTE EID
-      ethers.utils.zeroPad(Signers[0].address, 32),
+      zeroPadValue(Signers[0].address, 32),
       tokensToSend,
       tokensToSend,
       options,
@@ -348,7 +348,7 @@ describe("Testing Warp functionality", () => {
       warpProof.publicInputs,
       options,
       {
-        value: parseEther("10"),
+        value: nativeFee * 3n,
       },
     );
   });

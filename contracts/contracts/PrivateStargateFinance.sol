@@ -16,7 +16,6 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
 import {IOFT, SendParam, OFTReceipt} from "@layerzerolabs/oft-evm/contracts/interfaces/IOFT.sol";
-import "hardhat/console.sol";
 
 uint256 constant NOTES_INPUT_LENGTH = 3;
 
@@ -312,6 +311,6 @@ contract PrivateStargateFinance is PrivateStargateOApp, AccessControl {
             payable(msg.sender)
         );
 
-        console.log("sent");
+        // TODO EVENTS AND NOTE SHARING
     }
 }

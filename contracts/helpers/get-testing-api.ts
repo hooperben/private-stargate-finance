@@ -1,22 +1,20 @@
-import { Signer } from "ethers";
+import { zeroPadValue } from "ethers";
 import { ethers } from "hardhat";
+import { PrivateStargateFinance } from "../typechain-types";
 import { BASE_EID, deployMockTokens, REMOTE_EID } from "./deploy-mock-tokens";
 import { deployPSF } from "./deploy-psf";
 import { deployVerifiers } from "./deploy-verifiers";
 import { getNoirClasses } from "./get-noir-classes";
-import { getMerkleTree } from "./merkle";
 import { loadPoseidon } from "./load-poseidon";
+import { getMerkleTree } from "./merkle";
 
 export const getTestingAPI = async () => {
   const Signers = await ethers.getSigners();
-  const Deployer = Signers[0] as unknown as Signer;
+  const Deployer = Signers[0];
 
   const verifiers = await deployVerifiers();
 
   const poseidonHash = await loadPoseidon();
-
-  const poseidonTestFactory = await ethers.getContractFactory("PoseidonTest");
-  const poseidonTest = await poseidonTestFactory.deploy();
 
   const {
     usdcDeployment,
@@ -26,35 +24,41 @@ export const getTestingAPI = async () => {
     lzOFTDeploymentRemote,
   } = await deployMockTokens();
 
-  const basePSF = await deployPSF(
-    baseEndpoint.address,
-    await Deployer.getAddress(),
+  const basePSF = (await deployPSF(
+    await baseEndpoint.getAddress(),
+    Deployer.address,
     verifiers.deposit,
     verifiers.transfer,
     verifiers.withdraw,
     verifiers.warp,
-  );
+  )) as unknown as PrivateStargateFinance;
 
-  const remotePSF = await deployPSF(
-    remoteEndpoint.address,
-    await Deployer.getAddress(),
+  const remotePSF = (await deployPSF(
+    await remoteEndpoint.getAddress(),
+    Deployer.address,
     verifiers.deposit,
     verifiers.transfer,
     verifiers.withdraw,
     verifiers.warp,
-  );
+  )) as unknown as PrivateStargateFinance;
 
   // wire up PSFs
   await baseEndpoint.setDestLzEndpoint(
-    remotePSF.address,
-    remoteEndpoint.address,
+    await remotePSF.getAddress(),
+    await remoteEndpoint.getAddress(),
   );
-  await remoteEndpoint.setDestLzEndpoint(basePSF.address, baseEndpoint.address);
+  await remoteEndpoint.setDestLzEndpoint(
+    await basePSF.getAddress(),
+    await baseEndpoint.getAddress(),
+  );
   await basePSF.setPeer(
     REMOTE_EID,
-    ethers.utils.zeroPad(remotePSF.address, 32),
+    zeroPadValue(await remotePSF.getAddress(), 32),
   );
-  await remotePSF.setPeer(BASE_EID, ethers.utils.zeroPad(basePSF.address, 32));
+  await remotePSF.setPeer(
+    BASE_EID,
+    zeroPadValue(await basePSF.getAddress(), 32),
+  );
 
   const {
     depositNoir,
@@ -65,7 +69,7 @@ export const getTestingAPI = async () => {
     withdrawBackend,
     warpNoir,
     warpBackend,
-  } = await getNoirClasses();
+  } = getNoirClasses();
 
   const tree = await getMerkleTree();
 
@@ -82,7 +86,6 @@ export const getTestingAPI = async () => {
     warpNoir,
     warpBackend,
     Signers,
-    poseidonTest,
     poseidonHash,
     privateStargateFinance: basePSF,
     remotePSF,

@@ -2,24 +2,24 @@ import { Noir } from "@noir-lang/noir_js";
 import { getTestingAPI } from "../helpers/get-testing-api";
 
 import { UltraHonkBackend } from "@aztec/bb.js";
-import { Contract } from "ethers";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { parseUnits } from "ethers/lib/utils";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { parseUnits } from "ethers";
+import { approve } from "../helpers/functions/approve";
+import { PrivateStargateFinance, USDC } from "../typechain-types";
 
 describe("Testing deposit functionality", () => {
-  let Signers: SignerWithAddress[];
+  let Signers: HardhatEthersSigner[];
   let poseidonHash: (inputs: bigint[]) => Promise<{ toString(): string }>;
 
   let depositNoir: Noir;
   let depositBackend: UltraHonkBackend;
 
-  let privateStargateFinance: Contract;
-  let usdcDeployment: Contract;
+  let privateStargateFinance: PrivateStargateFinance;
+  let usdcDeployment: USDC;
 
   beforeEach(async () => {
-    Signers = await ethers.getSigners();
     ({
+      Signers,
       usdcDeployment,
       poseidonHash,
       depositNoir,
@@ -29,7 +29,7 @@ describe("Testing deposit functionality", () => {
   });
 
   it("testing note proving in typescript", async () => {
-    const assetId = usdcDeployment.address;
+    const assetId = await usdcDeployment.getAddress();
     const amount = BigInt("5");
 
     const secret =
@@ -51,12 +51,12 @@ describe("Testing deposit functionality", () => {
 
     const proof = await depositBackend.generateProof(witness, { keccak: true });
 
-    // approve PSF to move USDC tokens
-    const parseAmount = parseUnits("5", 6);
-    const approveTx = await usdcDeployment
-      .connect(Signers[0])
-      .approve(privateStargateFinance.address, parseAmount);
-    await approveTx.wait();
+    await approve(
+      Signers[0],
+      await usdcDeployment.getAddress(),
+      await privateStargateFinance.getAddress(),
+      parseUnits("5", 6),
+    );
 
     await privateStargateFinance.deposit(
       assetId,

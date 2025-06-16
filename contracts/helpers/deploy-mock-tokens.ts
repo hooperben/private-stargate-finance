@@ -1,4 +1,5 @@
-import { ethers, deployments, network } from "hardhat";
+import { zeroPadValue } from "ethers";
+import { ethers, network } from "hardhat";
 
 export const BASE_EID = 1;
 export const REMOTE_EID = 2;
@@ -6,20 +7,13 @@ export const REMOTE_EID = 2;
 const setUpLZ = async () => {
   if (network.name !== "hardhat" && network.name !== "localhost")
     throw new Error("Called this one wrong");
-  const [Deployer] = await ethers.getSigners();
-
   // DEPLOY LZ TEST SUITE
-  const EndpointV2MockArtifact = await deployments.getArtifact(
+  const EndpointV2MockFactory = await ethers.getContractFactory(
     "EndpointV2Mock",
   );
-  const EndpointV2Mock = new ethers.ContractFactory(
-    EndpointV2MockArtifact.abi,
-    EndpointV2MockArtifact.bytecode,
-    Deployer,
-  );
 
-  const baseEndpoint = await EndpointV2Mock.deploy(BASE_EID);
-  const remoteEndpoint = await EndpointV2Mock.deploy(REMOTE_EID);
+  const baseEndpoint = await EndpointV2MockFactory.deploy(BASE_EID);
+  const remoteEndpoint = await EndpointV2MockFactory.deploy(REMOTE_EID);
 
   return {
     baseEndpoint,
@@ -29,36 +23,36 @@ const setUpLZ = async () => {
 
 export const deployMockTokens = async () => {
   const [Deployer] = await ethers.getSigners();
-  const USDCFactory = await ethers.getContractFactory("USDC", Deployer);
+  const USDCFactory = await ethers.getContractFactory("USDC");
   const usdcDeployment = await USDCFactory.deploy();
 
-  const LZOFTFactory = await ethers.getContractFactory("LZOFT", Deployer);
+  const LZOFTFactory = await ethers.getContractFactory("LZOFT");
 
   const { baseEndpoint, remoteEndpoint } = await setUpLZ();
 
   const lzOFTDeploymentBase = await LZOFTFactory.deploy(
     "XXX",
     "XXX",
-    baseEndpoint.address,
+    await baseEndpoint.getAddress(),
     Deployer.address,
   );
 
   const lzOFTDeploymentRemote = await LZOFTFactory.deploy(
     "YYY",
     "YYY",
-    remoteEndpoint.address,
+    await remoteEndpoint.getAddress(),
     Deployer.address,
   );
 
   // Setting destination endpoints in the LZEndpoint mock for each MyOApp instance
   // (this is not needed in prod)
   await baseEndpoint.setDestLzEndpoint(
-    lzOFTDeploymentRemote.address,
-    remoteEndpoint.address,
+    await lzOFTDeploymentRemote.getAddress(),
+    await remoteEndpoint.getAddress(),
   );
   await remoteEndpoint.setDestLzEndpoint(
-    lzOFTDeploymentBase.address,
-    baseEndpoint.address,
+    await lzOFTDeploymentBase.getAddress(),
+    await baseEndpoint.getAddress(),
   );
 
   // wire up
@@ -66,11 +60,11 @@ export const deployMockTokens = async () => {
   // Setting each MyOApp instance as a peer of the other
   await lzOFTDeploymentBase.setPeer(
     REMOTE_EID,
-    ethers.utils.zeroPad(lzOFTDeploymentRemote.address, 32),
+    zeroPadValue(await lzOFTDeploymentRemote.getAddress(), 32),
   );
   await lzOFTDeploymentRemote.setPeer(
     BASE_EID,
-    ethers.utils.zeroPad(lzOFTDeploymentBase.address, 32),
+    zeroPadValue(await lzOFTDeploymentBase.getAddress(), 32),
   );
 
   return {

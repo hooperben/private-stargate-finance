@@ -2,22 +2,24 @@ import { Noir } from "@noir-lang/noir_js";
 import { getRandomWithField } from "../helpers";
 import { getTestingAPI } from "../helpers/get-testing-api";
 
-import { Contract } from "ethers";
+import { Contract, zeroPadValue } from "ethers";
 import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { parseEther } from "ethers/lib/utils";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+
+import { parseEther } from "ethers";
 import { expect } from "chai";
 
 import { Options } from "@layerzerolabs/lz-v2-utilities";
 import { REMOTE_EID } from "../helpers/deploy-mock-tokens";
+import { LZOFT, PrivateStargateFinance } from "../typechain-types";
 
 describe("Testing OApp functionality", async () => {
-  let Signers: SignerWithAddress[];
+  let Signers: HardhatEthersSigner[];
 
-  let privateStargateFinance: Contract;
+  let privateStargateFinance: PrivateStargateFinance;
 
-  let lzOFTDeploymentBase: Contract;
-  let lzOFTDeploymentRemote: Contract;
+  let lzOFTDeploymentBase: LZOFT;
+  let lzOFTDeploymentRemote: LZOFT;
 
   beforeEach(async () => {
     Signers = await ethers.getSigners();
@@ -41,7 +43,7 @@ describe("Testing OApp functionality", async () => {
 
     const sendParam = [
       REMOTE_EID, // REMOTE EID
-      ethers.utils.zeroPad(Signers[0].address, 32),
+      zeroPadValue(Signers[0].address, 32),
       tokensToSend,
       tokensToSend,
       options,
@@ -63,7 +65,7 @@ describe("Testing OApp functionality", async () => {
     );
 
     expect(BigInt(deployerBalanceAfter - deployerBalanceBefore)).eq(
-      tokensToSend.toBigInt(),
+      tokensToSend,
     );
   });
 
@@ -81,8 +83,8 @@ describe("Testing OApp functionality", async () => {
       options,
       false,
     );
-    // const warpTx = await privateStargateFinance.warp(2n, notesToSend, options, {
-    //   value: nativeFee,
-    // });
+
+    // if it can get a quote it's wired correctly
+    expect(nativeFee).to.not.be.undefined;
   });
 });

@@ -1,11 +1,8 @@
-import "dotenv/config";
-
-import "@layerzerolabs/toolbox-hardhat";
-import "@nomicfoundation/hardhat-verify";
-import "@nomiclabs/hardhat-ethers";
-import "hardhat-contract-sizer";
-import "hardhat-deploy";
-import { HardhatUserConfig } from "hardhat/types";
+import { HardhatUserConfig } from "hardhat/config";
+import "@nomicfoundation/hardhat-toolbox";
+import "@typechain/hardhat";
+import "@nomicfoundation/hardhat-ethers";
+import "@nomicfoundation/hardhat-chai-matchers";
 
 const config: HardhatUserConfig = {
   solidity: {

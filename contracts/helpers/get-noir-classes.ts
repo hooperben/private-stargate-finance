@@ -6,7 +6,7 @@ import transferCircuit from "../../circuits/transfer/target/transfer.json";
 import withdrawCircuit from "../../circuits/withdraw/target/withdraw.json";
 import warpCircuit from "../../circuits/warp/target/warp.json";
 
-export const getNoirClasses = async () => {
+export const getNoirClasses = () => {
   // @ts-expect-error no idea
   const depositNoir = new Noir(depositCircuit);
   const depositBackend = new UltraHonkBackend(depositCircuit.bytecode);

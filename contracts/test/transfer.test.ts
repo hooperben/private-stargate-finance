@@ -1,11 +1,9 @@
 import { Noir } from "@noir-lang/noir_js";
-import { getRandomWithField } from "../helpers";
 import { getTestingAPI } from "../helpers/get-testing-api";
 
 import { UltraHonkBackend } from "@aztec/bb.js";
-import { Contract } from "ethers";
 import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { PoseidonMerkleTree } from "../helpers/PoseidonMerkleTree";
 import {
   createInputNote,
@@ -13,10 +11,11 @@ import {
   createOutputNote,
   emptyOutputNote,
 } from "../helpers/formatting";
-import { parseUnits } from "ethers/lib/utils";
+import { parseUnits } from "ethers";
+import { PrivateStargateFinance, USDC } from "../typechain-types";
 
 describe("Testing Transfer functionality", () => {
-  let Signers: SignerWithAddress[];
+  let Signers: HardhatEthersSigner[];
   let poseidonHash: (inputs: bigint[]) => Promise<{ toString(): string }>;
 
   let depositNoir: Noir;
@@ -25,10 +24,10 @@ describe("Testing Transfer functionality", () => {
   let transferNoir: Noir;
   let transferBackend: UltraHonkBackend;
 
-  let privateStargateFinance: Contract;
+  let privateStargateFinance: PrivateStargateFinance;
   let tree: PoseidonMerkleTree;
 
-  let usdcDeployment: Contract;
+  let usdcDeployment: USDC;
   const getNullifier = async (
     leafIndex: bigint,
     owner: bigint,
@@ -72,7 +71,7 @@ describe("Testing Transfer functionality", () => {
   });
 
   it("testing transfer functionality", async () => {
-    const assetId = usdcDeployment.address;
+    const assetId = await usdcDeployment.getAddress();
     const amount = BigInt("5");
     const secret =
       2389312107716289199307843900794656424062350252250388738019021107824217896920n;
@@ -99,7 +98,7 @@ describe("Testing Transfer functionality", () => {
     const parseAmount = parseUnits("5", 6);
     const approveTx = await usdcDeployment
       .connect(Signers[0])
-      .approve(privateStargateFinance.address, parseAmount);
+      .approve(await privateStargateFinance.getAddress(), parseAmount);
     await approveTx.wait();
 
     // deposit the tokens into the pool
