@@ -1,6 +1,9 @@
+import { ProofData } from "@aztec/bb.js";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { InputNote, OutputNote } from "..";
-import { getNoirClasses } from "../test-suite/get-noir-classes";
+import { PrivateStargateFinance } from "../../typechain-types";
 import { PoseidonMerkleTree } from "../PoseidonMerkleTree";
+import { getNoirClasses } from "../test-suite/get-noir-classes";
 
 export const getTransferDetails = async (
   tree: PoseidonMerkleTree,
@@ -29,4 +32,16 @@ export const getTransferDetails = async (
   return {
     proof: transferProof,
   };
+};
+
+export const transfer = async (
+  privateStargateFinance: PrivateStargateFinance,
+  proof: ProofData,
+  runner: HardhatEthersSigner,
+) => {
+  const tx = await privateStargateFinance
+    .connect(runner)
+    .transfer(proof.proof, proof.publicInputs);
+
+  return tx;
 };

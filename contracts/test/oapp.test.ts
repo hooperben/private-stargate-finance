@@ -39,22 +39,22 @@ describe("Testing OApp functionality", async () => {
       .toHex()
       .toString();
 
-    const sendParam = [
-      REMOTE_EID, // REMOTE EID
-      zeroPadValue(Signers[0].address, 32),
-      tokensToSend,
-      tokensToSend,
-      options,
-      "0x",
-      "0x",
-    ];
+    const sendParam = {
+      dstEid: REMOTE_EID,
+      to: zeroPadValue(Signers[0].address, 32),
+      amountLD: tokensToSend,
+      minAmountLD: tokensToSend,
+      extraOptions: options,
+      composeMsg: "0x",
+      oftCmd: "0x",
+    };
 
     const [nativeFee] = await lzOFTDeploymentBase.quoteSend(sendParam, false);
 
     // Executing the send operation from myOFTA contract
     await lzOFTDeploymentBase
       .connect(Signers[0])
-      .send(sendParam, [nativeFee, 0], Signers[0].address, {
+      .send(sendParam, { nativeFee, lzTokenFee: 0n }, Signers[0].address, {
         value: nativeFee, // fees + native amount
       });
 

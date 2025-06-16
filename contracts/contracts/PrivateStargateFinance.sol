@@ -13,7 +13,7 @@ import {WithdrawVerifier} from "./verifiers/WithdrawVerifier.sol";
 import {WarpVerifier} from "./verifiers/WarpVerifier.sol";
 import {IStargatePool} from "./IStargatePool.sol";
 
-import {PrivateStargateOApp} from "./PrivateStargateOApp.sol";
+import "./PrivateStargateOApp.sol";
 
 uint256 constant NOTES_INPUT_LENGTH = 3;
 uint256 constant EXIT_ASSET_START_INDEX = 4;

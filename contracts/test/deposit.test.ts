@@ -4,8 +4,8 @@ import { parseUnits } from "ethers";
 import { approve } from "../helpers/functions/approve";
 import { getDepositDetails } from "../helpers/functions/deposit";
 import { getTestingAPI } from "../helpers/get-testing-api";
-import { PrivateStargateFinance, USDC } from "../typechain-types";
 import { PoseidonMerkleTree } from "../helpers/PoseidonMerkleTree";
+import { PrivateStargateFinance, USDC } from "../typechain-types";
 
 describe("Testing deposit functionality", () => {
   let Signers: HardhatEthersSigner[];
@@ -27,9 +27,9 @@ describe("Testing deposit functionality", () => {
 
     const secret =
       2389312107716289199307843900794656424062350252250388738019021107824217896920n;
-    const owner_secret =
+    const ownerSecret =
       10036677144260647934022413515521823129584317400947571241312859176539726523915n;
-    const owner = BigInt((await poseidonHash([owner_secret])).toString());
+    const owner = BigInt((await poseidonHash([ownerSecret])).toString());
 
     // create the ZK proof
     const { proof } = await getDepositDetails({

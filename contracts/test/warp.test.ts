@@ -1,5 +1,6 @@
 import { Options } from "@layerzerolabs/lz-v2-utilities";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { expect } from "chai";
 import { parseUnits } from "ethers";
 import {
   createInputNote,
@@ -11,7 +12,7 @@ import { approve } from "../helpers/functions/approve";
 import { getDepositDetails } from "../helpers/functions/deposit";
 import { getNoteHash } from "../helpers/functions/get-note-hash";
 import { getNullifier } from "../helpers/functions/get-nullifier";
-import { getTransferDetails } from "../helpers/functions/transfer";
+import { getTransferDetails, transfer } from "../helpers/functions/transfer";
 import { getWarpDetails } from "../helpers/functions/warp";
 import { getTestingAPI } from "../helpers/get-testing-api";
 import { PoseidonMerkleTree } from "../helpers/PoseidonMerkleTree";
@@ -23,6 +24,7 @@ describe("Testing Warp functionality", () => {
   let poseidonHash: (inputs: bigint[]) => Promise<{ toString(): string }>;
 
   let privateStargateFinance: PrivateStargateFinance;
+  let remotePSF: PrivateStargateFinance;
   let tree: PoseidonMerkleTree;
 
   let lzOFTDeploymentBase: LZOFT;
@@ -35,6 +37,7 @@ describe("Testing Warp functionality", () => {
       lzOFTDeploymentRemote,
       poseidonHash,
       privateStargateFinance,
+      remotePSF,
       tree,
     } = await getTestingAPI());
   });
@@ -44,9 +47,9 @@ describe("Testing Warp functionality", () => {
     const assetAmount = BigInt("5");
     const secret =
       2389312107716289199307843900794656424062350252250388738019021107824217896920n;
-    const owner_secret =
+    const ownerSecret =
       10036677144260647934022413515521823129584317400947571241312859176539726523915n;
-    const owner = BigInt((await poseidonHash([owner_secret])).toString());
+    const owner = BigInt((await poseidonHash([ownerSecret])).toString());
 
     // in order to transfer we need to first deposit
     const { proof: depositProof } = await getDepositDetails({
@@ -75,18 +78,18 @@ describe("Testing Warp functionality", () => {
     const leafIndex = 0n;
 
     // create the input note to spend
-    const alice_input_note = createInputNote(
+    const aliceInputNote = createInputNote(
       assetId,
       assetAmount,
       owner,
-      owner_secret,
+      ownerSecret,
       secret,
       leafIndex,
       merkleProof.siblings,
       merkleProof.indices,
     );
 
-    const alice_input_nullifer = await getNullifier(
+    const aliceInputNullifier = await getNullifier(
       leafIndex,
       owner,
       secret,
@@ -95,40 +98,36 @@ describe("Testing Warp functionality", () => {
     );
 
     // ALICE CHANGE NOTE DETAILS
-    const alice_owner = owner;
-    const alice_amount = 3n;
-    const alice_note_secret =
-      19536471094918068928039225564664574556680178861106125446000998678966251111926n;
-    const alice_output_note = createOutputNote(
-      alice_owner,
-      alice_note_secret,
+    const aliceOwner = owner;
+    const aliceAmount = 3n;
+    const aliceOutputNote = createOutputNote(
+      aliceOwner,
+      19536471094918068928039225564664574556680178861106125446000998678966251111926n,
       assetId,
-      alice_amount,
+      aliceAmount,
     );
-    const alice_output_hash = await getNoteHash(alice_output_note);
+    const aliceOutputHash = await getNoteHash(aliceOutputNote);
 
     // BOB SEND NOTE DETAILS
-    const bob_owner_secret =
+    const bobOwnerSecret =
       6955001134965379637962992480442037189090898019061077075663294923529403402038n;
-    const bob_owner = await poseidonHash([bob_owner_secret]);
-    const bob_note_secret =
-      3957740128091467064337395812164919758932045173069261808814882570720300029469n;
-    const bob_amount = 2n;
+    const bobOwner = await poseidonHash([bobOwnerSecret]);
+    const bobAmount = 2n;
     const bobOutputNote = createOutputNote(
-      bob_owner.toString(),
-      bob_note_secret,
+      bobOwner.toString(),
+      3957740128091467064337395812164919758932045173069261808814882570720300029469n,
       assetId,
-      bob_amount,
+      bobAmount,
     );
 
-    const bob_output_hash = await getNoteHash(bobOutputNote);
+    const bobOutputHash = await getNoteHash(bobOutputNote);
 
-    const inputNotes = [alice_input_note, emptyInputNote, emptyInputNote];
-    const outputNotes = [alice_output_note, bobOutputNote, emptyOutputNote];
-    const nullifiers = [BigInt(alice_input_nullifer.toString()), 0n, 0n];
+    const inputNotes = [aliceInputNote, emptyInputNote, emptyInputNote];
+    const outputNotes = [aliceOutputNote, bobOutputNote, emptyOutputNote];
+    const nullifiers = [BigInt(aliceInputNullifier.toString()), 0n, 0n];
     const outputHashes = [
-      BigInt(alice_output_hash.toString()),
-      BigInt(bob_output_hash.toString()),
+      BigInt(aliceOutputHash.toString()),
+      BigInt(bobOutputHash.toString()),
       0n,
     ];
 
@@ -140,13 +139,10 @@ describe("Testing Warp functionality", () => {
       outputHashes,
     );
 
-    // submit the transfer TX (as relayer)
-    await privateStargateFinance
-      .connect(Signers[10])
-      .transfer(transferProof.proof, transferProof.publicInputs);
+    await transfer(privateStargateFinance, transferProof, Signers[0]);
 
-    await tree.insert(alice_output_hash.toString(), 1);
-    await tree.insert(bob_output_hash.toString(), 2);
+    await tree.insert(aliceOutputHash.toString(), 1);
+    await tree.insert(bobOutputHash.toString(), 2);
 
     // NOW BOB IS GOING TO WARP 1 OF HIS TOKENS REMOTE_EID
     const bobRoot = (await tree.getRoot()).toBigInt();
@@ -154,10 +150,10 @@ describe("Testing Warp functionality", () => {
 
     const bobInputNote = createInputNote(
       BigInt(assetId),
-      bob_amount,
-      BigInt(bob_owner.toString()),
-      bob_owner_secret,
-      bob_note_secret,
+      bobAmount,
+      BigInt(bobOwner.toString()),
+      bobOwnerSecret,
+      bobOutputNote.secret,
       2n,
       bobProof.siblings.map((item) => item.toBigInt()),
       bobProof.indices.map((item) => BigInt(item)),
@@ -172,16 +168,16 @@ describe("Testing Warp functionality", () => {
 
     // BOB FIRST NOTE
     const bobOutputNote1 = createOutputNote(
-      BigInt(bob_owner.toString()),
+      BigInt(bobOwner.toString()),
       20692543145395281049201570311039088439241217488240697505239066711129161561961n,
-      BigInt(assetId),
+      assetId,
       1n,
     );
     const bobOutputNote1Hash = await getNoteHash(bobOutputNote1);
 
     // BOB SECOND NOTE
     const bobOutputNote2 = createOutputNote(
-      BigInt(bob_owner.toString()),
+      BigInt(bobOwner.toString()),
       19367321191663727441411635172708374860517590059336496178869629509133908474360n,
       BigInt(assetId),
       1n,
@@ -214,14 +210,25 @@ describe("Testing Warp functionality", () => {
       ["0", "0x" + BigInt(bobOutputNote2.asset_amount).toString(16), "0"],
     );
 
+    const lzOFTDeploymentRemoteBalanceBefore =
+      await lzOFTDeploymentRemote.balanceOf(await remotePSF.getAddress());
+
     const warpTx = await privateStargateFinance.warp(
       REMOTE_EID,
       warpProof.proof,
       warpProof.publicInputs,
       options,
       {
-        value: nativeFee * 3n,
+        value: nativeFee * 3n, // TODO fix
       },
+    );
+
+    const lzOFTDeploymentRemoteBalanceAfter =
+      await lzOFTDeploymentRemote.balanceOf(await remotePSF.getAddress());
+
+    expect(lzOFTDeploymentRemoteBalanceBefore).eq(
+      lzOFTDeploymentRemoteBalanceAfter -
+        parseUnits(bobOutputNote2.asset_amount.toString(), 18),
     );
   });
 });
