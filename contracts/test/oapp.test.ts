@@ -1,8 +1,6 @@
-import { Noir } from "@noir-lang/noir_js";
-import { getRandomWithField } from "../helpers";
 import { getTestingAPI } from "../helpers/get-testing-api";
 
-import { Contract, zeroPadValue } from "ethers";
+import { zeroPadValue } from "ethers";
 import { ethers } from "hardhat";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 

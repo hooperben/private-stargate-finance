@@ -1,12 +1,14 @@
+import { Fr } from "@aztec/foundation/fields";
+
 export const createInputNote = (
-  assetId: bigint,
-  amount: bigint,
-  owner: bigint,
-  owner_secret: bigint,
-  secret: bigint,
-  leaf_index: bigint,
-  path: bigint[],
-  path_indices: bigint[],
+  assetId: bigint | string,
+  amount: bigint | string,
+  owner: bigint | string,
+  owner_secret: bigint | string,
+  secret: bigint | string,
+  leaf_index: bigint | string,
+  path: bigint[] | string[] | Fr[],
+  path_indices: bigint[] | number[],
 ) => {
   return {
     asset_id: assetId.toString(),
@@ -15,7 +17,7 @@ export const createInputNote = (
     owner_secret: owner_secret.toString(),
     secret: secret.toString(),
     leaf_index: leaf_index.toString(),
-    path: path.map((item) => item.toString()),
+    path: path.map((item) => BigInt(item.toString()).toString()),
     path_indices: path_indices.map((item) => item.toString()),
   };
 };
@@ -32,10 +34,10 @@ export const emptyInputNote = createInputNote(
 );
 
 export const createOutputNote = (
-  owner: bigint,
-  secret: bigint,
-  asset_id: bigint,
-  asset_amount: bigint,
+  owner: bigint | string,
+  secret: bigint | string,
+  asset_id: bigint | string,
+  asset_amount: bigint | string,
 ) => {
   return {
     owner: owner.toString(),

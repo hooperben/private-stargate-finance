@@ -5,6 +5,7 @@ import { approve } from "../helpers/functions/approve";
 import { getDepositDetails } from "../helpers/functions/deposit";
 import { getTestingAPI } from "../helpers/get-testing-api";
 import { PrivateStargateFinance, USDC } from "../typechain-types";
+import { PoseidonMerkleTree } from "../helpers/PoseidonMerkleTree";
 
 describe("Testing deposit functionality", () => {
   let Signers: HardhatEthersSigner[];
@@ -13,8 +14,10 @@ describe("Testing deposit functionality", () => {
   let privateStargateFinance: PrivateStargateFinance;
   let usdcDeployment: USDC;
 
+  let tree: PoseidonMerkleTree;
+
   beforeEach(async () => {
-    ({ Signers, usdcDeployment, poseidonHash, privateStargateFinance } =
+    ({ Signers, usdcDeployment, poseidonHash, privateStargateFinance, tree } =
       await getTestingAPI());
   });
 
@@ -63,5 +66,8 @@ describe("Testing deposit functionality", () => {
     const usdcBalanceAfter = await usdcDeployment.balanceOf(Signers[0].address);
 
     expect(usdcBalanceAfter).eq(usdcBalanceBefore - evmAmount);
+
+    // check our merkle state matches
+    await tree.insert(proof.publicInputs[0], 0);
   });
 });
