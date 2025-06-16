@@ -12,6 +12,13 @@ This repository contains the contracts and circuits required to facilitate priva
 
 `circuits/` contains the noir circuits that power all of the privacy enchancing features of this protocol
 
+have a look at this excalidraw for a more indepth, slightly rambling explanation of how this all works:
+
+[https://link.excalidraw.com/l/5BJ6ZosQeYI/8CgytajWHYz
+](https://link.excalidraw.com/l/5BJ6ZosQeYI/8CgytajWHYz)
+
+# versions
+
 versions used of noir and bb:
 
 ```bash
