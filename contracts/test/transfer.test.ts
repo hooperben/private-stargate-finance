@@ -104,12 +104,12 @@ describe("Testing Transfer functionality", () => {
     // BOB SEND NOTE DETAILS
     const bobOwnerSecret =
       6955001134965379637962992480442037189090898019061077075663294923529403402038n;
-    const bobOwner = await poseidonHash([bobOwnerSecret]);
+    const bobOwner = (await poseidonHash([bobOwnerSecret])).toString();
     const bobNoteSecret =
       3957740128091467064337395812164919758932045173069261808814882570720300029469n;
     const bobAmount = 2n;
     const bobOutputNote = createOutputNote(
-      bobOwner.toString(),
+      bobOwner,
       bobNoteSecret,
       assetId,
       bobAmount,

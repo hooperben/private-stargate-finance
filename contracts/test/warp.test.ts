@@ -89,13 +89,7 @@ describe("Testing Warp functionality", () => {
       merkleProof.indices,
     );
 
-    const aliceInputNullifier = await getNullifier(
-      leafIndex,
-      owner,
-      secret,
-      assetId,
-      assetAmount,
-    );
+    const aliceInputNullifier = await getNullifier(aliceInputNote);
 
     // ALICE CHANGE NOTE DETAILS
     const aliceOwner = owner;
@@ -111,7 +105,7 @@ describe("Testing Warp functionality", () => {
     // BOB SEND NOTE DETAILS
     const bobOwnerSecret =
       6955001134965379637962992480442037189090898019061077075663294923529403402038n;
-    const bobOwner = await poseidonHash([bobOwnerSecret]);
+    const bobOwner = (await poseidonHash([bobOwnerSecret])).toString();
     const bobAmount = 2n;
     const bobOutputNote = createOutputNote(
       bobOwner.toString(),
@@ -151,24 +145,18 @@ describe("Testing Warp functionality", () => {
     const bobInputNote = createInputNote(
       BigInt(assetId),
       bobAmount,
-      BigInt(bobOwner.toString()),
+      bobOwner,
       bobOwnerSecret,
       bobOutputNote.secret,
       2n,
-      bobProof.siblings.map((item) => item.toBigInt()),
-      bobProof.indices.map((item) => BigInt(item)),
+      bobProof.siblings,
+      bobProof.indices,
     );
-    const bobInputNullifier = await getNullifier(
-      bobInputNote.leaf_index,
-      bobInputNote.owner,
-      bobInputNote.secret,
-      bobInputNote.asset_id,
-      bobInputNote.asset_amount,
-    );
+    const bobInputNullifier = await getNullifier(bobInputNote);
 
     // BOB FIRST NOTE
     const bobOutputNote1 = createOutputNote(
-      BigInt(bobOwner.toString()),
+      bobOwner,
       20692543145395281049201570311039088439241217488240697505239066711129161561961n,
       assetId,
       1n,
@@ -177,7 +165,7 @@ describe("Testing Warp functionality", () => {
 
     // BOB SECOND NOTE
     const bobOutputNote2 = createOutputNote(
-      BigInt(bobOwner.toString()),
+      bobOwner,
       19367321191663727441411635172708374860517590059336496178869629509133908474360n,
       BigInt(assetId),
       1n,

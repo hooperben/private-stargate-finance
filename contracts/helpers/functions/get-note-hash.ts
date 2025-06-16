@@ -1,11 +1,5 @@
+import { OutputNote } from "..";
 import { loadPoseidon } from "../load-poseidon";
-
-interface OutputNote {
-  owner: string | bigint;
-  secret: string | bigint;
-  asset_id: string | bigint;
-  asset_amount: string | bigint;
-}
 
 // Function overloads
 export async function getNoteHash(note: OutputNote): Promise<bigint>;
