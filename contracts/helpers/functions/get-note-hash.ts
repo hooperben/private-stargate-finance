@@ -8,16 +8,14 @@ interface OutputNote {
 }
 
 // Function overloads
-export async function getNoteHash(
-  note: OutputNote,
-): Promise<{ toString(): string }>;
+export async function getNoteHash(note: OutputNote): Promise<bigint>;
 
 export async function getNoteHash(
   owner: bigint | string,
   secret: bigint | string,
   assetId: bigint | string,
   amount: bigint | string,
-): Promise<{ toString(): string }>;
+): Promise<bigint>;
 
 // Implementation
 export async function getNoteHash(
@@ -25,7 +23,7 @@ export async function getNoteHash(
   secret?: bigint | string,
   assetId?: bigint | string,
   amount?: bigint | string,
-): Promise<{ toString(): string }> {
+): Promise<bigint> {
   const poseidonHash = await loadPoseidon();
 
   let owner: bigint | string;
@@ -63,5 +61,6 @@ export async function getNoteHash(
     BigInt(owner),
     BigInt(noteSecret),
   ]);
-  return noteHash;
+
+  return BigInt(noteHash.toString());
 }

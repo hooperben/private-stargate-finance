@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import { Contract } from "ethers";
-import { PrivateStargateFinance__factory } from "../typechain-types";
+import { PrivateStargateFinance__factory } from "../../typechain-types";
 
 export const deployPSF = async (
   lzEndpoint: string,

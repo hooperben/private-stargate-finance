@@ -1,10 +1,10 @@
 import { UltraHonkBackend } from "@aztec/bb.js";
 import { Noir } from "@noir-lang/noir_js";
 
-import depositCircuit from "../../circuits/deposit/target/deposit.json";
-import transferCircuit from "../../circuits/transfer/target/transfer.json";
-import withdrawCircuit from "../../circuits/withdraw/target/withdraw.json";
-import warpCircuit from "../../circuits/warp/target/warp.json";
+import depositCircuit from "../../../circuits/deposit/target/deposit.json";
+import transferCircuit from "../../../circuits/transfer/target/transfer.json";
+import withdrawCircuit from "../../../circuits/withdraw/target/withdraw.json";
+import warpCircuit from "../../../circuits/warp/target/warp.json";
 
 export const getNoirClasses = () => {
   // @ts-expect-error no idea

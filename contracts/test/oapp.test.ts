@@ -8,7 +8,7 @@ import { parseEther } from "ethers";
 import { expect } from "chai";
 
 import { Options } from "@layerzerolabs/lz-v2-utilities";
-import { REMOTE_EID } from "../helpers/deploy-mock-tokens";
+import { REMOTE_EID } from "../helpers/test-suite/deploy-mock-tokens";
 import { LZOFT, PrivateStargateFinance } from "../typechain-types";
 
 describe("Testing OApp functionality", async () => {

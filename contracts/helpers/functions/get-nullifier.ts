@@ -16,5 +16,5 @@ export const getNullifier = async (
     BigInt(amount),
   ]);
 
-  return nullifier;
+  return BigInt(nullifier.toString());
 };

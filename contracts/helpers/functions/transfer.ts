@@ -1,23 +1,6 @@
-import { getNoirClasses } from "../get-noir-classes";
+import { InputNote, OutputNote } from "..";
+import { getNoirClasses } from "../test-suite/get-noir-classes";
 import { PoseidonMerkleTree } from "../PoseidonMerkleTree";
-
-interface InputNote {
-  asset_id: bigint | string;
-  asset_amount: bigint | string;
-  owner: bigint | string;
-  owner_secret: bigint | string;
-  secret: bigint | string;
-  leaf_index: bigint | string;
-  path: bigint | string[];
-  path_indices: bigint | string[];
-}
-
-interface OutputNote {
-  owner: string;
-  secret: string;
-  asset_id: string;
-  asset_amount: string;
-}
 
 export const getTransferDetails = async (
   tree: PoseidonMerkleTree,

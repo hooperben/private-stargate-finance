@@ -1,21 +1,17 @@
-import { Noir } from "@noir-lang/noir_js";
-import { getRandomWithField } from "../helpers";
-import { getTestingAPI } from "../helpers/get-testing-api";
-
 import { UltraHonkBackend } from "@aztec/bb.js";
-import { Contract } from "ethers";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { Noir } from "@noir-lang/noir_js";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { expect } from "chai";
+import { parseUnits } from "ethers";
 import { PoseidonMerkleTree } from "../helpers/PoseidonMerkleTree";
 import {
   createInputNote,
-  emptyInputNote,
   createOutputNote,
+  emptyInputNote,
   emptyOutputNote,
 } from "../helpers/formatting";
-import { parseUnits } from "ethers";
-import { expect } from "chai";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { approve } from "../helpers/functions/approve";
+import { getTestingAPI } from "../helpers/get-testing-api";
 import { PrivateStargateFinance, USDC } from "../typechain-types";
 
 describe("Testing Withdraw functionality", () => {
@@ -104,12 +100,12 @@ describe("Testing Withdraw functionality", () => {
       keccak: true,
     });
 
-    // approve PSF to move USDC tokens
-    const parseAmount = parseUnits("5", 6);
-    const approveTx = await usdcDeployment
-      .connect(Signers[0])
-      .approve(await privateStargateFinance.getAddress(), parseAmount);
-    await approveTx.wait();
+    await approve(
+      Signers[0],
+      await usdcDeployment.getAddress(),
+      await privateStargateFinance.getAddress(),
+      parseUnits("5", 6),
+    );
 
     // deposit the tokens into the pool
     await privateStargateFinance.deposit(

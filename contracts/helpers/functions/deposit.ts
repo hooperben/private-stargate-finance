@@ -1,12 +1,6 @@
-import { getNoirClasses } from "../get-noir-classes";
+import { getNoirClasses } from "../test-suite/get-noir-classes";
 import { loadPoseidon } from "../load-poseidon";
-
-interface DepositNote {
-  assetId: string | bigint;
-  assetAmount: string | bigint;
-  secret: string | bigint;
-  owner: string | bigint;
-}
+import { DepositNote } from "..";
 
 export const getDepositDetails = async (depositNote: DepositNote) => {
   const { assetId, assetAmount, secret, owner } = depositNote;
