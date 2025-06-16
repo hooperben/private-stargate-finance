@@ -7,17 +7,17 @@ import {
   createOutputNote,
   emptyInputNote,
   emptyOutputNote,
-} from "../helpers/formatting";
-import { approve } from "../helpers/functions/approve";
-import { getDepositDetails } from "../helpers/functions/deposit";
-import { getNoteHash } from "../helpers/functions/get-note-hash";
-import { getNullifier } from "../helpers/functions/get-nullifier";
-import { getTransferDetails, transfer } from "../helpers/functions/transfer";
-import { getWarpDetails } from "../helpers/functions/warp";
-import { getTestingAPI } from "../helpers/get-testing-api";
-import { PoseidonMerkleTree } from "../helpers/poseidon-merkle-tree";
-import { REMOTE_EID } from "../helpers/test-suite/deploy-mock-tokens";
-import { LZOFT, PrivateStargateFinance, USDC } from "../typechain-types";
+} from "@/helpers/formatting";
+import { approve } from "@/helpers/functions/approve";
+import { getDepositDetails } from "@/helpers/functions/deposit";
+import { getNoteHash } from "@/helpers/functions/get-note-hash";
+import { getNullifier } from "@/helpers/functions/get-nullifier";
+import { getTransferDetails, transfer } from "@/helpers/functions/transfer";
+import { getWarpDetails } from "@/helpers/functions/warp";
+import { getTestingAPI } from "@/helpers/get-testing-api";
+import { PoseidonMerkleTree } from "@/helpers/poseidon-merkle-tree";
+import { REMOTE_EID } from "@/helpers/test-suite/deploy-mock-tokens";
+import { LZOFT, PrivateStargateFinance, USDC } from "@/typechain-types";
 
 describe("Testing Warp functionality", () => {
   let Signers: HardhatEthersSigner[];

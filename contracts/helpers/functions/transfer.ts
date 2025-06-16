@@ -1,9 +1,9 @@
+import { PoseidonMerkleTree } from "@/helpers/poseidon-merkle-tree";
+import { getNoirClasses } from "@/helpers/test-suite/get-noir-classes";
+import { PrivateStargateFinance } from "@/typechain-types";
 import { ProofData } from "@aztec/bb.js";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { InputNote, OutputNote } from "..";
-import { PrivateStargateFinance } from "../../typechain-types";
-import { PoseidonMerkleTree } from "../poseidon-merkle-tree";
-import { getNoirClasses } from "../test-suite/get-noir-classes";
 
 export const getTransferDetails = async (
   tree: PoseidonMerkleTree,

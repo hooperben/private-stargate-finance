@@ -1,5 +1,5 @@
+import { loadPoseidon } from "@/helpers/load-poseidon";
 import { OutputNote } from "..";
-import { loadPoseidon } from "../load-poseidon";
 
 // Function overloads
 export async function getNoteHash(note: OutputNote): Promise<bigint>;

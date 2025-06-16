@@ -1,20 +1,20 @@
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { parseUnits } from "ethers";
-import { ethers } from "hardhat";
-import { PoseidonMerkleTree } from "../helpers/poseidon-merkle-tree";
 import {
   createInputNote,
   createOutputNote,
   emptyInputNote,
   emptyOutputNote,
-} from "../helpers/formatting";
-import { approve } from "../helpers/functions/approve";
-import { getDepositDetails } from "../helpers/functions/deposit";
-import { getNoteHash } from "../helpers/functions/get-note-hash";
-import { getNullifier } from "../helpers/functions/get-nullifier";
-import { getTransferDetails, transfer } from "../helpers/functions/transfer";
-import { getTestingAPI } from "../helpers/get-testing-api";
-import { PrivateStargateFinance, USDC } from "../typechain-types";
+} from "@/helpers/formatting";
+import { approve } from "@/helpers/functions/approve";
+import { getDepositDetails } from "@/helpers/functions/deposit";
+import { getNoteHash } from "@/helpers/functions/get-note-hash";
+import { getNullifier } from "@/helpers/functions/get-nullifier";
+import { getTransferDetails, transfer } from "@/helpers/functions/transfer";
+import { getTestingAPI } from "@/helpers/get-testing-api";
+import { PoseidonMerkleTree } from "@/helpers/poseidon-merkle-tree";
+import { PrivateStargateFinance, USDC } from "@/typechain-types";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { parseUnits } from "ethers";
+import { ethers } from "hardhat";
 
 describe("Testing Transfer functionality", () => {
   let Signers: HardhatEthersSigner[];

@@ -1,6 +1,6 @@
+import { PoseidonMerkleTree } from "@/helpers/poseidon-merkle-tree";
 import { keccak256, toUtf8Bytes } from "ethers";
 import * as path from "path";
-import { PoseidonMerkleTree } from "../poseidon-merkle-tree";
 
 const ZERO_VALUE =
   BigInt(keccak256(toUtf8Bytes("TANGERINE"))) %

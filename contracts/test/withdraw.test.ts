@@ -1,21 +1,21 @@
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { expect } from "chai";
-import { parseUnits } from "ethers";
-import { PoseidonMerkleTree } from "../helpers/poseidon-merkle-tree";
 import {
   createInputNote,
   createOutputNote,
   emptyInputNote,
   emptyOutputNote,
-} from "../helpers/formatting";
-import { approve } from "../helpers/functions/approve";
-import { getTestingAPI } from "../helpers/get-testing-api";
-import { PrivateStargateFinance, USDC } from "../typechain-types";
-import { getNoteHash } from "../helpers/functions/get-note-hash";
-import { getNullifier } from "../helpers/functions/get-nullifier";
-import { getDepositDetails } from "../helpers/functions/deposit";
-import { getTransferDetails, transfer } from "../helpers/functions/transfer";
-import { getWithdrawDetails } from "../helpers/functions/withdraw";
+} from "@/helpers/formatting";
+import { approve } from "@/helpers/functions/approve";
+import { getDepositDetails } from "@/helpers/functions/deposit";
+import { getNoteHash } from "@/helpers/functions/get-note-hash";
+import { getNullifier } from "@/helpers/functions/get-nullifier";
+import { getTransferDetails, transfer } from "@/helpers/functions/transfer";
+import { getWithdrawDetails } from "@/helpers/functions/withdraw";
+import { getTestingAPI } from "@/helpers/get-testing-api";
+import { PoseidonMerkleTree } from "@/helpers/poseidon-merkle-tree";
+import { PrivateStargateFinance, USDC } from "@/typechain-types";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { expect } from "chai";
+import { parseUnits } from "ethers";
 
 describe("Testing Withdraw functionality", () => {
   let Signers: HardhatEthersSigner[];

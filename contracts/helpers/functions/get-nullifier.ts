@@ -1,5 +1,5 @@
 import { InputNote } from "..";
-import { loadPoseidon } from "../load-poseidon";
+import { loadPoseidon } from "@/helpers/load-poseidon";
 
 // Function overloads
 export async function getNullifier(note: InputNote): Promise<bigint>;

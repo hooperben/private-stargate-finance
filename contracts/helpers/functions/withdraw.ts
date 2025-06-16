@@ -1,6 +1,6 @@
+import { PoseidonMerkleTree } from "@/helpers/poseidon-merkle-tree";
+import { getNoirClasses } from "@/helpers/test-suite/get-noir-classes";
 import { InputNote } from "..";
-import { PoseidonMerkleTree } from "../poseidon-merkle-tree";
-import { getNoirClasses } from "../test-suite/get-noir-classes";
 
 export const getWithdrawDetails = async (
   tree: PoseidonMerkleTree,

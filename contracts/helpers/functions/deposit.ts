@@ -1,5 +1,5 @@
-import { getNoirClasses } from "../test-suite/get-noir-classes";
-import { loadPoseidon } from "../load-poseidon";
+import { loadPoseidon } from "@/helpers/load-poseidon";
+import { getNoirClasses } from "@/helpers/test-suite/get-noir-classes";
 import { DepositNote } from "..";
 
 export const getDepositDetails = async (depositNote: DepositNote) => {

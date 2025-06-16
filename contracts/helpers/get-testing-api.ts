@@ -1,16 +1,16 @@
-import { zeroPadValue } from "ethers";
-import { ethers } from "hardhat";
-import { PrivateStargateFinance } from "../typechain-types";
 import {
   BASE_EID,
   deployMockTokens,
   REMOTE_EID,
-} from "./test-suite/deploy-mock-tokens";
-import { deployPSF } from "./test-suite/deploy-psf";
-import { deployVerifiers } from "./test-suite/deploy-verifiers";
-import { getNoirClasses } from "./test-suite/get-noir-classes";
+} from "@/helpers/test-suite/deploy-mock-tokens";
+import { deployPSF } from "@/helpers/test-suite/deploy-psf";
+import { deployVerifiers } from "@/helpers/test-suite/deploy-verifiers";
+import { getNoirClasses } from "@/helpers/test-suite/get-noir-classes";
+import { getMerkleTree } from "@/helpers/test-suite/merkle";
+import { PrivateStargateFinance } from "@/typechain-types";
+import { zeroPadValue } from "ethers";
+import { ethers } from "hardhat";
 import { loadPoseidon } from "./load-poseidon";
-import { getMerkleTree } from "./test-suite/merkle";
 
 export const getTestingAPI = async () => {
   const Signers = await ethers.getSigners();

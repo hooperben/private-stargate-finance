@@ -1,15 +1,11 @@
-import { getTestingAPI } from "../helpers/get-testing-api";
-
-import { zeroPadValue } from "ethers";
-import { ethers } from "hardhat";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-
-import { parseEther } from "ethers";
-import { expect } from "chai";
-
+import { getTestingAPI } from "@/helpers/get-testing-api";
+import { REMOTE_EID } from "@/helpers/test-suite/deploy-mock-tokens";
+import { LZOFT, PrivateStargateFinance } from "@/typechain-types";
 import { Options } from "@layerzerolabs/lz-v2-utilities";
-import { REMOTE_EID } from "../helpers/test-suite/deploy-mock-tokens";
-import { LZOFT, PrivateStargateFinance } from "../typechain-types";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { expect } from "chai";
+import { parseEther, zeroPadValue } from "ethers";
+import { ethers } from "hardhat";
 
 describe("Testing OApp functionality", async () => {
   let Signers: HardhatEthersSigner[];

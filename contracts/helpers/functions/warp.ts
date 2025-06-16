@@ -1,4 +1,4 @@
-import { getNoirClasses } from "../test-suite/get-noir-classes";
+import { getNoirClasses } from "@/helpers/test-suite/get-noir-classes";
 import { InputNote, OutputNote } from "..";
 
 export const getWarpDetails = async (
