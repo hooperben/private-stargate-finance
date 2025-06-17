@@ -1,7 +1,3 @@
-import { Options } from "@layerzerolabs/lz-v2-utilities";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { expect } from "chai";
-import { parseUnits } from "ethers";
 import {
   createInputNote,
   createOutputNote,
@@ -17,7 +13,11 @@ import { getWarpDetails } from "@/helpers/functions/warp";
 import { getTestingAPI } from "@/helpers/get-testing-api";
 import { PoseidonMerkleTree } from "@/helpers/poseidon-merkle-tree";
 import { REMOTE_EID } from "@/helpers/test-suite/deploy-mock-tokens";
-import { LZOFT, PrivateStargateFinance, USDC } from "@/typechain-types";
+import { LZOFT, PrivateStargateFinance } from "@/typechain-types";
+import { Options } from "@layerzerolabs/lz-v2-utilities";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { expect } from "chai";
+import { parseUnits } from "ethers";
 
 describe("Testing Warp functionality", () => {
   let Signers: HardhatEthersSigner[];
@@ -40,6 +40,12 @@ describe("Testing Warp functionality", () => {
       remotePSF,
       tree,
     } = await getTestingAPI());
+
+    // we have to add the OFT contract as a supported OFT for the warp method
+    await privateStargateFinance.addSupportedOFT(
+      await lzOFTDeploymentBase.getAddress(),
+      true,
+    );
   });
 
   it("testing warp functionality", async () => {

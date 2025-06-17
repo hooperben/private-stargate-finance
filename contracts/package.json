@@ -8,12 +8,12 @@
     "@aztec/bb.js": "0.84.0",
     "@aztec/foundation": "^0.87.8",
     "@layerzerolabs/lz-evm-messagelib-v2": "^3.0.12",
+    "@layerzerolabs/lz-evm-oapp-v2": "^3.0.103",
     "@layerzerolabs/lz-evm-protocol-v2": "^3.0.12",
     "@layerzerolabs/lz-evm-v1-0.7": "^3.0.12",
-    "@layerzerolabs/oft-evm": "^2.0.0",
-    "@layerzerolabs/lz-evm-oapp-v2": "^3.0.103",
     "@layerzerolabs/lz-v2-utilities": "^3.0.103",
     "@layerzerolabs/oapp-evm": "^0.3.2",
+    "@layerzerolabs/oft-evm": "^2.0.0",
     "@layerzerolabs/test-devtools-evm-foundry": "^6.0.3",
     "@layerzerolabs/test-devtools-evm-hardhat": "^0.5.2",
     "@layerzerolabs/toolbox-hardhat": "^0.6.11",
@@ -32,7 +32,8 @@
     "hardhat-contract-size": "^0.0.1-security",
     "hardhat-contract-sizer": "^2.10.0",
     "hardhat-deploy": "^0.12.1",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0"
   },
   "peerDependencies": {
     "typescript": "^5.8.3"

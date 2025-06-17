@@ -33,6 +33,9 @@ contract PrivateStargateFinance is
     bytes32 public DEPOSIT_ROLE = keccak256("DEPOSIT_ROLE"); // :(
 
     mapping(bytes32 => bool) public nullifierUsed;
+    mapping(address => bool) public availableOFTs;
+
+    event NullifierUsed(uint256 indexed nullifier);
 
     constructor(
         address _endpoint,
@@ -83,8 +86,6 @@ contract PrivateStargateFinance is
         // INSERT NOTE INTO TREE
         _insert(uint256(_publicInputs[0]));
     }
-
-    event NullifierUsed(uint256 indexed nullifier);
 
     function transfer(
         bytes calldata _proof,
@@ -190,6 +191,14 @@ contract PrivateStargateFinance is
         bool isValidProof = warpVerifier.verify(_proof, _publicInputs);
         require(isValidProof, "Invalid warp proof");
 
+        // check that all assets used in this cross chain request are supported
+        for (uint256 i = 7; i < 9; i++) {
+            if (_publicInputs[i] != bytes32(0)) {
+                address exitAsset = address(uint160(uint256(_publicInputs[i])));
+                require(availableOFTs[exitAsset], "Not a supported OFT");
+            }
+        }
+
         // publicInputs layout:
         // 0 = root
         // 1 - 3 = nullifiers
@@ -226,7 +235,16 @@ contract PrivateStargateFinance is
 
         // get the address of private stargate finance on the remote chain
         bytes32 peer = peers[_dstEid];
+
+        // send the stargate assets to the PSF on the remote chain
         _sendStargateAssets(_dstEid, peer, _publicInputs, _options);
+    }
+
+    function addSupportedOFT(
+        address _oft,
+        bool _enabled
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        availableOFTs[_oft] = _enabled;
     }
 
     fallback() external payable {}
