@@ -2,7 +2,8 @@
   "name": "contracts",
   "private": true,
   "scripts": {
-    "build": "./scripts/build-and-export-circuits.sh"
+    "build": "./scripts/build-and-export-circuits.sh",
+    "gate-count": "./scripts/get-gate-counts.sh"
   },
   "devDependencies": {
     "@aztec/bb.js": "0.84.0",
